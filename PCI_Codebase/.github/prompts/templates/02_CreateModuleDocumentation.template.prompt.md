@@ -1,0 +1,3 @@
+@workspace Erzeuge eine Dokumentation zum Modul <Modulname> und lege diese als Markdown-Datei mit dem Namen "<Modulnummer>\_<Modulname>Documentation.md" im "docs" Ordner ab. Erzeuge einen Verweis darauf in der "01_SystemSummary.md" im entsprechenden Kapitel. Die Dokumentation soll alle fachlichen Funktionen des Moduls im Detail beschreiben. Sie soll auch die vorhandenen Benutzeroberflächen und deren Funktionen dokumentieren. Weiterhin soll das Datenmodell in Form eines ER-Diagramms dargestellt werden, welches als Bilddatei im aktuellen Ordner abgelegt wird (Format: Mermaid).
+
+Ergänze einen Link zur neuen Dokumentation im entsprechenden Kapitel der zentralen `01_SystemSummary.md`.

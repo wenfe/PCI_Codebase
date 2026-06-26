@@ -1,0 +1,1 @@
+@workspace Erzeuge eine Dokumentation zum <Modulname> Framework und lege diese als Markdown-Datei mit dem Namen "<Modulnummer>_<Modulname>Documentation.md" im "docs" Ordner ab. Beschreibe darin Anwendungsgebiete, Architektur, verwendete Technologien und Best Practices sowie die zum Framework gehörenden Datenstrukturen. Liste Einsatzgebiete des <Modulname> Frameworks auf.
