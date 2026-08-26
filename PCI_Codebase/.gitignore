@@ -1,0 +1,12 @@
+# Python bytecode and local environments
+__pycache__/
+*.py[cod]
+.venv/
+.uv-cache/
+
+# Jupyter temporary files
+.ipynb_checkpoints/
+
+# Generated simulation caches and outputs
+SAXS_asymmetry/cache/
+SAXS_asymmetry/outputs/

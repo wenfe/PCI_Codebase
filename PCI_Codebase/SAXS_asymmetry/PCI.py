@@ -57,7 +57,6 @@ from IPython.display import display, HTML
 display(HTML("<style>.container { width:100% !important; }</style>"))
 
 #colored print
-from IPython.core.display import display
 from IPython.display import HTML as html_print
 def cstr(s, color='black', bg="white", weight="normal"):
     return ("<table width=100% style='padding:0'><tr  align='left' style='padding:0;text-align:left;font-weight:{};color:{};background-color:{}'><td align='left' style='padding:0;text-align:left'>{}</td></tr></table>".format(weight,color,bg, s))
@@ -74,6 +73,9 @@ nm=1. # base unit for length nanometer
 
 keV=1 # base unit for energy
 eV=1e-3
+
+# Wen: uniformly define the constant h*c in keV*nm for wavelength-energy conversion
+HC_KEV_NM = 1.239842 # h*c in keV*nm: lambda [nm] = HC_KEV_NM / E [keV]
  
 # Material classes
 class Material():
@@ -355,7 +357,7 @@ class XFEL():
                 photon_energy=self.get_photon_energy()
             return 5.06773076 * photon_energy
         else:
-            2*np.pi/Lambda
+            return 2*np.pi/Lambda
 
     def get_lambda(self, k=None, photon_energy=None):
         if photon_energy is None:
@@ -369,8 +371,19 @@ class XFEL():
     
     def get_field(self):
         return self._realPart,self._imagPart
-        
-        
+
+    @property
+    def intensity_detector(self):
+        # intensity |E|^2 on the current plane (PIC/SAXS intensity), available without calling plot()
+        realPart, imagPart = self.get_field()
+        return realPart**2 + imagPart**2
+
+    @intensity_detector.setter
+    def intensity_detector(self, value):
+        # plot() assigns this; reads always recompute from the current field, so the assigned value is not kept
+        pass
+
+
     def _define_image_scale(self,reset=True, pixel_number=None, pixel_size=None):
         if pixel_number is None:
             pixel_number=self._pixel_number
@@ -578,30 +591,25 @@ class XFEL():
         # Output by Lingen after target
         self.intensity_aftertarget = transmitted_I
         self.phase_aftertarget = beamPhase - dPhi
-        
 
-        plt.figure(figsize=[6,3])
-        plt.subplot(1,2,1)
-        plt.title("transmitted intensity")
-        plt.imshow(transmitted_I)
-        #plt.colorbar()
-        
+        # Keep propagation free of pyplot state. This method can be called from
+        # worker threads, while matplotlib.pyplot's current figure/axes are
+        # process-global and therefore unsafe to mutate concurrently.
         beamPhase = beamPhase - dPhi
-        
-        
+
         # Wrapping the phase from -pi to pi by Lingen
         #beamPhase = np.angle(np.exp(-1j * beamPhase))
         #beamPhase_LH = np.angle(np.exp(-1j * beamPhase))
         #beamPhase = (beamPhase + np.pi) % (2 * np.pi) - np.pi
         
-        
-        plt.subplot(1,2,2)
-        plt.title("transmitted phase")
-        plt.imshow(beamPhase)
-        #plt.colorbar()
-        plt.tight_layout()
-        plt.show()
-        
+        #Wen: remove 
+        # plt.subplot(1,2,2)
+        # plt.title("transmitted phase")
+        # plt.imshow(beamPhase)
+        # #plt.colorbar()
+        # plt.tight_layout()
+        # plt.show()
+
         # Construct the wave at contact
         wave_real = np.cos(beamPhase)
         wave_imag = np.sin(beamPhase)
@@ -770,8 +778,88 @@ class XFEL():
             self._imagPart = E_new.imag
             
         return E_new
+    
+    # Wen: compatibility method to use LightPipes Fresnel convolution for propagation, preserving the input pixel size and avoiding periodic wrap-around effects.
+    ##############################################################################
+    def fresnel_convolution_propagate_to_position(
+        self,
+        position=None,
+        field_in=None,
+        reset=True,
+        photon_energy=None,
+    ):
+        """Propagate on a fixed grid with the LightPipes Fresnel convolution.
+
+        This reproduces the propagation path used to create the legacy
+        ``DivPCI_Offset*.tif`` files in ``SAXS_PCI_Pointing_Div.ipynb``:
+        the complex field immediately after the target is reconstructed in
+        LightPipes and propagated with ``LightPipes.Fresnel``.  Unlike
+        :meth:`lorentz_propagate_to_position`, this method preserves the input
+        pixel size.  Unlike :meth:`spectral_propagate_to_position`, its
+        zero-padded convolution does not impose the same periodic wrap-around
+        on the returned field of view.
+
+        LightPipes is imported only when this optional compatibility method is
+        called, so the rest of PCI.py does not acquire a mandatory dependency.
+        Lengths passed to PCI.py are in nanometres; they are converted to SI
+        units at the LightPipes boundary.
+        """
+        if position is None:
+            raise ValueError("position must be provided")
+        if not np.isfinite(position) or position < 0:
+            raise ValueError("position must be finite and non-negative")
+        if photon_energy is None:
+            photon_energy = self.get_photon_energy()
+        if field_in is None:
+            field_in = self._realPart + 1j * self._imagPart
+
+        field_in = np.asarray(field_in)
+        expected_shape = (self._pixel_number, self._pixel_number)
+        if field_in.shape != expected_shape:
+            raise ValueError(
+                f"field_in must have shape {expected_shape}, got {field_in.shape}"
+            )
+        if position == 0:
+            E_new = np.array(field_in, dtype=np.complex128, copy=True)
+        else:
+            try:
+                import LightPipes as LP
+            except ImportError as exc:
+                raise ImportError(
+                    "fresnel_convolution_propagate_to_position requires "
+                    "LightPipes; install it with 'python -m pip install LightPipes'"
+                ) from exc
+
+            wavelength_nm = self.get_lambda(photon_energy=photon_energy)
+            grid_size_m = self._pixel_number * self._pixel_size * LP.nm
+            wavelength_m = wavelength_nm * LP.nm
+            distance_m = position * LP.nm
+
+            lp_field = LP.Begin(
+                grid_size_m,
+                wavelength_m,
+                self._pixel_number,
+            )
+            lp_field = LP.SubIntensity(lp_field, np.abs(field_in) ** 2)
+            lp_field = LP.SubPhase(lp_field, np.angle(field_in))
+            lp_field = LP.Fresnel(lp_field, distance_m)
+            E_new = np.asarray(lp_field.field, dtype=np.complex128)
+
+        axis_nm = (
+            np.arange(-self._pixel_number / 2, self._pixel_number / 2)
+            * self._pixel_size
+        )
+        self.new_x_plot = axis_nm / um
+        self.new_pixel_size = self._pixel_size / um
+
+        if reset:
+            self._realPart = E_new.real
+            self._imagPart = E_new.imag
+
+        return E_new
             
-        
+    ##################################################################################################
+       
     def lorentz_propagate_to_position(self,position=None,field_in=None,reset=True, photon_energy=None):           
         if photon_energy is None:
             photon_energy = self.get_photon_energy()
@@ -843,10 +931,12 @@ class gaussian_XFEL(XFEL):
         Lambda = self.get_lambda(photon_energy=photon_energy)
         # Calculate the rayleigh length
         self._define_image_scale()
-        zr = np.pi * self.get_waist()**2 / Lambda
+        zr = np.pi * self.get_waist()**2 / Lambda 
         print("Rayleigh [m]: ",zr*1e-9)              
-        # Calculate the radius of curvature at the propagation point
-        Rz = ((position)**2 + zr**2) / (position)
+        # Calculate the radius of curvature at the propagation point.  At the
+        # waist (z=0) the wavefront is planar, so R(z) tends to infinity.
+        # Evaluate that limit explicitly instead of dividing by zero.
+        Rz = np.inf if position == 0 else (position**2 + zr**2) / position
         print("Radius [um]: ",Rz*1e-3,Lambda)
         #print("Fresnel: ",self._parameters["ri_nm"]**2/position/Lambda)
         

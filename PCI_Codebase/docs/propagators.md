@@ -1,14 +1,17 @@
-﻿# HRXP Propagator Math
+# HRXP Propagator Math
 
-This document explains the wave-optics propagators implemented in `PCI.py`, the
-physics they encode, and how they map onto the source code. All quantities use
-the module unit system: **length in nanometers** (`nm = 1`) and **energy in keV**.
+This document explains the wave-optics propagators implemented in
+`SAXS_asymmetry/PCI.py` (HRXP, the Hibef ReLaX XFEL Propagator), the physics
+they encode, and how they map onto the source code. All quantities use the
+module unit system: **length in nanometers** (`nm = 1`) and **energy in keV**
+(convenience constants `m`, `um`, `mm`, `cm`, `eV` are provided).
 
 ---
 
 ## 1. Conventions and base quantities
 
-The field is a scalar, monochromatic, complex wavefield in a transverse plane:
+The field is a scalar, monochromatic, complex wavefield in a transverse plane,
+using the phasor convention $E(r,z)\,e^{-i\omega t}$:
 
 $$E(x, y) = E_r(x, y) + i\,E_i(x, y) = A(x,y)\, e^{i\phi(x,y)}$$
 
@@ -16,66 +19,94 @@ stored as `self._realPart` and `self._imagPart`.
 
 | Symbol | Meaning | Code |
 | --- | --- | --- |
-| $k$ | wavenumber $2\pi/\lambda$ | `get_k()` → `5.06773076 * E[keV]` |
+| $k$ | wavenumber $2\pi/\lambda$ | `get_k()` → `2π · E[keV] / HC_KEV_NM` |
 | $\lambda$ | wavelength | `get_lambda()` → `2π/k` |
 | $\delta$ | refractive index decrement | `get_n_refraction_delta()` |
 | $\beta$ | absorption index | `get_n_refraction_beta()` |
 | $t(x,y)$ | projected target thickness | `_get_projection()` |
 
-The relation $k = 5.06773076\,E[\text{keV}]$ comes from
-$k = 2\pi/\lambda$ with $\lambda[\text{nm}] = 1.239842 / E[\text{keV}]$, so
-$k = 2\pi \cdot E / 1.239842 = 5.0677\,E$ per nm.
+The named constant `HC_KEV_NM = 1.239842` is $h c$ in keV·nm, so
+$\lambda[\text{nm}] = 1.239842 / E[\text{keV}]$ and
+$k = 2\pi E / 1.239842 \approx 5.0677\,E$ per nm.
 
-The complex refractive index is
+Under the $e^{-i\omega t}$ convention the complex refractive index is
 
-$$n = 1 - \delta - i\beta$$
+$$n = 1 - \delta + i\beta$$
 
 with
 
-$$\delta = 0.933386 \; N_a\, \rho\, \frac{Z}{A}\, r_e \, \frac{\lambda^2}{2\pi},
+$$\delta = C \; N_a\, \rho\, \frac{Z}{A}\, r_e \, \frac{\lambda^2}{2\pi},
 \qquad
 \beta = \frac{\mu_1\,\rho}{E^{\mu_2}}.$$
 
-The leading `0.933386` is an empirical Henke-data correction (flagged in the
-source as "needs to be checked").
+The prefactor $C$ is the `dispersion_correction` constructor parameter of
+`Material` (default `0.933386`, the legacy empirical correction that matches
+Henke optical constants; set it to `1.0` for the uncorrected free-electron /
+Thomson model). The $\beta$ power law is empirical (fit for copper in `Cu`)
+and must not be extrapolated across absorption edges. Photon energies are
+validated to be positive and finite; invalid input raises `ValueError`.
 
 ---
 
 ## 2. Interaction with a target (thin / projection approximation)
 
 A target is treated as an infinitely thin phase-and-amplitude screen at its
-$z$ position. The outgoing field is the incoming field multiplied by a complex
-transmission:
+$z$ position. A target may stack several material regions; phase delays and
+optical depths add linearly before the exponentials are formed:
 
 $$E_{\text{out}}(x,y) = E_{\text{in}}(x,y)\;
-\underbrace{e^{-\frac{1}{2}\mu\, t(x,y)}}_{\text{amplitude transmission}}\;
-\underbrace{e^{-i\,\Delta\phi(x,y)}}_{\text{phase shift}}$$
+\underbrace{e^{-k \beta\, t(x,y)}}_{\text{amplitude transmission}}\;
+\underbrace{e^{-i\,k \delta\, t(x,y)}}_{\text{phase shift}}$$
 
 ### Amplitude (absorption)
-`Target.get_absorption()` returns the **field** transmission (note the factor
-$\tfrac{1}{2}$ — intensity goes as $e^{-\mu t}$, amplitude as $e^{-\mu t/2}$):
+`Material._get_mu()` returns the Beer–Lambert **intensity** attenuation
+coefficient in nm⁻¹:
 
-$$T_{\text{field}} = e^{-\frac{1}{2}\mu\, t}, \qquad \mu = \beta \cdot E \cdot 10 \;\; [\mu\text{m}^{-1}]$$
+$$\mu = 2 k \beta$$
+
+`Target.get_absorption()` sums the optical depths of all materials and returns
+the **field** transmission (the factor $\tfrac12$ maps intensity attenuation to
+amplitude attenuation — intensity goes as $e^{-\mu t}$, amplitude as
+$e^{-\mu t/2} = e^{-k\beta t}$):
+
+$$T_{\text{field}} = \exp\Big[-\tfrac12 \textstyle\sum_i \mu_i\, t_i(x,y)\Big]$$
 
 ### Phase
-`Material._get_phase_shift()` gives the per-length phase, multiplied by the
-projected thickness in `Target.get_phase_shift()`:
+`Material._get_phase_shift()` returns the per-length phase coefficient
+$k\delta$ in nm⁻¹; `Target.get_phase_shift()` multiplies it by the projected
+thickness and sums over materials:
 
-$$\Delta\phi(x,y) = k\,\delta\, t(x,y) = \frac{2\pi}{\lambda}\,\delta\, t(x,y)$$
+$$\Delta\phi(x,y) = \sum_i k\,\delta_i\, t_i(x,y)$$
 
 ### In code (`propagate_through_target`)
-```text
-transmission     = interpolate( target.get_absorption )      # e^{-mu t /2}
-E0               = |field_in|
-transmitted_E0   = E0 * transmission
-beamPhase        = angle(field_in)
-dPhi             = interpolate( target.get_phase_shift )      # k delta t
-beamPhase        = beamPhase - dPhi
-wave_at_contact  = transmitted_E0 * (cos(beamPhase) + i sin(beamPhase))
+The transmission is applied complex-natively — no manual phase decomposition
+or wrapping (the complex exponential already represents phase modulo $2\pi$):
+
+```python
+absorption  = self._interpolate_target2beam(target.get_absorption(E), target)
+phase_shift = self._interpolate_target2beam(target.get_phase_shift(E), target)
+output = field * absorption * np.exp(-1j * phase_shift)
 ```
 
-The target grid (voxel size) is resampled onto the beam grid (pixel size) by
-`_interpolate_target2beam()` using a `RectBivariateSpline`.
+Diagnostics `intensity_beforetarget`, `phase_beforetarget`,
+`intensity_aftertarget`, and `phase_aftertarget` are stored on the XFEL object.
+
+### Target grid → beam grid
+`_interpolate_target2beam()` resamples the target grid (voxel size) onto the
+beam grid (pixel size) with a `RectBivariateSpline` (order `min(3, N-1)`),
+then applies two safeguards:
+
+- negative interpolated thickness (cubic-spline undershoot at sharp material
+  boundaries) is clipped to zero — negative path length would imply gain;
+- pixels outside the finite target domain are set to exactly zero, preventing
+  spline extrapolation from creating nonphysical material around the target.
+
+### The `wire` target
+`wire._get_projection()` evaluates the analytic chord of an infinite cylinder,
+$t(s) = 2\sqrt{R^2 - s^2}$, instead of voxelizing a 3-D volume — memory grows
+as $N^2$ rather than $N^3$ and no axial voxelization error is introduced.
+In-plane rotation and transverse offset are applied as 2-D resampling
+operations (`scipy.ndimage.rotate` / `shift`).
 
 ---
 
@@ -107,16 +138,23 @@ and $k_z$ becomes **imaginary**, giving exponential decay $e^{-|k_z| z}$. The
 code handles both branches explicitly:
 
 ```python
-argument = (2*np.pi/Lambda)**2 - kx**2 - ky**2
+c = fftshift(fft2(field_in))
+argument = (2*np.pi/Lambda)**2 - self._get_angular_frequency_squared()
 tmp = np.sqrt(np.abs(argument))
-kz  = np.where(argument >= 0, tmp, j*tmp)   # propagating vs evanescent
-cc  = ifftshift(c * np.exp(j * kz * Z))
-E_new = ifft2(cc)
+kz  = np.where(argument >= 0, tmp, 1j*tmp)   # propagating vs evanescent
+E_new = ifft2(ifftshift(c * np.exp(1j * kz * Z)))
 ```
+
+`_get_angular_frequency_squared()` caches the geometry-only grid
+$k_x^2 + k_y^2$ (built from `2π·fftfreq(N, Δx)`); wavelength and distance stay
+live inputs so the physical transfer function is exact for every spectral
+sample. The cache is invalidated whenever the image scale is redefined.
+`Z == 0` returns a copy of the input immediately.
 
 ### Properties
 - **Exact** (no paraxial approximation) — valid in near and far field.
-- **Pixel size unchanged**: output sampling = input sampling.
+- **Pixel size unchanged**: output sampling = input sampling (also exported as
+  `new_x_plot` / `new_pixel_size`, in µm).
 - Best for short propagation where the beam stays inside the window — ideal for
   phase-contrast fringe formation.
 
@@ -126,7 +164,7 @@ E_new = ifft2(cc)
 flowchart LR
     E0["E_0(x,y)\ninput field\npixel size Δx"] --> FFT["fft2\n+ fftshift"]
     FFT --> AS["Angular spectrum\nc(k_x, k_y)"]
-    KX["k_x, k_y grid\n2π·fftfreq(N, Δx)"] --> DISP
+    KX["cached k_x²+k_y² grid\n(2π·fftfreq(N, Δx))²"] --> DISP
     AS --> DISP{"argument =\n(2π/λ)² − k_x² − k_y²"}
     DISP -->|"≥ 0\npropagating"| KZP["k_z = √arg\nphase e^{i k_z z}"]
     DISP -->|"< 0\nevanescent"| KZE["k_z = i√|arg|\ndecay e^{−|k_z| z}"]
@@ -163,7 +201,9 @@ e^{\,i\frac{k}{2z}(X^2+Y^2)}\;
 \mathcal{F}\!\left\{ E_0(x,y)\, e^{\,i\frac{k}{2z}(x^2+y^2)} \right\}$$
 
 The input chirp $e^{ik(x^2+y^2)/2z}$ is applied, then one FFT, then the output
-quadratic phase factor $R$.
+quadratic phase factor $R$. The discrete sum approximates the continuous
+integral, so the FFT is multiplied by the Riemann-sum area element
+$\Delta x^2$.
 
 ### Pixel-size rescaling
 Because the FFT maps the input plane directly to the diffraction plane, the
@@ -174,20 +214,21 @@ $$\Delta X = \frac{2\pi z}{k\,N\,\Delta x} = \frac{\lambda z}{N\,\Delta x}$$
 In code:
 ```python
 new_pixel_size = Z * 2*np.pi / (k * old_pixel_number * old_pixel_size)
-E = fft2( E * np.exp(j*(k/(2*Z)*(self._x**2 + self._y**2))) )   # input chirp
-X, Y = self._define_image_scale(pixel_size=new_pixel_size)      # rescaled grid
-R = np.exp(j*k*Z)/(j*Lambda*Z) * np.exp(j*k/(2*Z)*(X**2 + Y**2))# output chirp
+E = old_pixel_size**2 * fft2(                                    # dx² norm
+        ifftshift(E * np.exp(1j*k/(2*Z)*(self._x**2 + self._y**2))))
+X, Y = self._define_image_scale(pixel_size=new_pixel_size, reset=False)
+R = np.exp(1j*k*Z)/(1j*Lambda*Z) * np.exp(1j*k/(2*Z)*(X**2 + Y**2))
 E = R * fftshift(E)
 ```
 
-> Note: the source flags a possible missing factor of 2 in `new_pixel_size`
-> (`Lingen lost of a factor of 2 ?`). Worth validating against a known SAXS
-> reference pattern, since it directly scales the q-axis calibration.
+The rescaled grid is stored as `_propagated_x` / `_propagated_y` /
+`_propagated_pixel_size` (and exported as `new_x_plot` / `new_pixel_size`, in
+µm). With `reset=True` the object's own image scale is redefined to the new
+pixel size; `Z == 0` returns the input unchanged on the unchanged grid.
 
 ### Properties
 - **Paraxial** (small-angle) approximation — valid only in the far field.
-- **Pixel size changes** with $z$ — magnifying coordinate system; the new axis
-  is exported as `new_x_plot` / `new_pixel_size`.
+- **Pixel size changes** with $z$ — magnifying coordinate system.
 - Efficient single FFT for large detector distances.
 
 ### Algorithm diagram
@@ -195,7 +236,7 @@ E = R * fftshift(E)
 ```mermaid
 flowchart LR
     E0["E_0(x,y)\ninput field\npixel size Δx"] --> CHIRP["× input chirp\ne^{i k/(2z)(x²+y²)}"]
-    CHIRP --> FFT["fft2\n+ fftshift"]
+    CHIRP --> FFT["ifftshift + fft2\n× Δx² (Riemann norm)"]
     FFT --> SCALE["rescale grid\nΔX = λz/(N·Δx)"]
     SCALE --> ROUT["× output factor R\ne^{ikz}/(iλz)·e^{i k/(2z)(X²+Y²)}"]
     ROUT --> EZ["E(X,Y,z)\nNEW pixel size ΔX"]
@@ -216,9 +257,12 @@ after (output curvature).
 | Near field / PCI | Angular Spectrum | $\mathcal{F}^{-1}[\mathcal{F}E_0\,e^{ik_z z}]$ | preserved | `spectral_propagate_to_position` |
 | Far field / SAXS | Fresnel single-FFT | chirp · FFT · chirp | rescaled | `lorentz_propagate_to_position` |
 
-`propagate_to()` selects automatically: PCI detectors (or no detector) use the
-spectral propagator for the final hop; SAXS detectors use the Lorentz/Fresnel
-propagator (and ignore the spectral bandwidth).
+`propagate_to()` selects automatically: PCI detectors (or a plain position with
+no detector) use the spectral propagator for the final hop; SAXS detectors use
+the Lorentz/Fresnel propagator. Both paths support a finite spectral
+bandwidth; because the Fresnel output grid is wavelength-dependent, SAXS
+spectral samples are resampled onto a common detector grid before they are
+combined (section 6).
 
 ### Side-by-side comparison
 
@@ -230,7 +274,7 @@ flowchart TB
     end
     subgraph FR["Fresnel single-FFT  (far field / SAXS)"]
         direction TB
-        f1["E_0"] --> f2["× input chirp"] --> f3["FFT"] --> f4["× output chirp R\n+ grid rescale"] --> f5["E(z)\nΔX = λz/(NΔx)"]
+        f1["E_0"] --> f2["× input chirp"] --> f3["FFT × Δx²"] --> f4["× output chirp R\n+ grid rescale"] --> f5["E(z)\nΔX = λz/(NΔx)"]
     end
 ```
 
@@ -247,32 +291,70 @@ flowchart TB
 
 ## 6. Polychromatic (bandwidth) propagation
 
-For a finite spectral width, `propagate_to()` samples a Gaussian energy profile
+Distinct photon-energy samples are **mutually incoherent**: their intensities,
+never their complex amplitudes, are weighted and summed.
 
-$$w(E) = 0.5^{\,2(E-E_0)^2/\text{FWHM}^2}$$
+`_spectral_samples()` builds the energy comb. The bandwidth parameter is
+interpreted as the FWHM of a Gaussian energy distribution; samples are placed
+at spacing `photon_energy_bandwidth_sample_width` covering ±2·FWHM (which
+captures essentially all Gaussian weight), with normalized weights
 
-propagates **each energy independently** (optionally in parallel via
-`multiprocessing.Pool`), sums the resulting intensities, and assigns each energy
-an RGB weight to render chromatic dispersion. Both $\delta$ and the diffraction
-angle scale with $\lambda$, so different colors focus and diffract differently.
+$$w(E) = \exp\!\left[-4\ln 2\,\frac{(E-E_0)^2}{\text{FWHM}^2}\right],
+\qquad \sum_E w(E) = 1.$$
+
+A zero bandwidth, zero sample width, or a sample width ≥ 4·FWHM degenerates to
+a single monochromatic sample.
+
+`propagate_to()` then, for each sample energy:
+
+1. runs the full source → targets → detector chain (section 7) — both $\delta$
+   and the diffraction angles scale with $\lambda$, so colors focus and
+   diffract differently;
+2. for **SAXS**, resamples the propagated complex field from that energy's
+   wavelength-dependent Fresnel grid onto the detector grid of the reference
+   sample (the one nearest the center energy) via `_resample_complex_field()`
+   (spline interpolation of real and imaginary parts, zero outside the source
+   domain). Summing equal array indices without this step would mix different
+   physical detector positions and create artificial chromatic structure;
+3. accumulates `w(E) · |E_field|²` into the total intensity, and into RGB
+   channels using per-energy red→green→blue ramp weights to render chromatic
+   dispersion (each channel finally normalized to its own maximum).
+
+The returned effective field is $\sqrt{I_{\text{total}}}\,e^{i\phi_{\text{ref}}}$ —
+physical summed intensity with the reference sample's phase borrowed for
+compatibility with the legacy complex-field API. Energies are processed
+serially; the module-level `parallel` flag can enable multi-threaded SciPy
+FFTs (`workers=`), replacing the old `multiprocessing.Pool` approach.
 
 ---
 
 ## 7. Full propagation pipeline
 
+Sources: `gaussian_XFEL` (fundamental paraxial Gaussian, unit integrated
+power), `plane_XFEL` (unit-amplitude plane wave), or `arbitrary_XFEL`
+(user-supplied source-plane field, advanced by angular-spectrum propagation).
+For the Gaussian, `initialize_to_position()` evaluates $w(z)$ (1/e field
+radius), the inverse curvature $1/R(z) = z/(z^2+z_R^2)$ (finite at the waist),
+Gouy phase $\arctan(z/z_R)$, and $z_R = \pi w_0^2/\lambda$.
+
 ```mermaid
 flowchart TD
-    A["gaussian_XFEL.initialize_to_position\n(Gaussian beam: q-parameter, w(z), R(z))"] --> B{For each target\nsorted by z}
+    A["initialize_to_position\n(Gaussian: w(z), 1/R(z), Gouy phase\nor plane / arbitrary source)"] --> B{"for each target\nsorted by z ≤ plane"}
     B --> C["spectral_propagate_to_position\n(vacuum hop, Angular Spectrum)"]
-    C --> D["propagate_through_target\nE_out = E_in · e^(-mu t/2) · e^(-i k delta t)"]
+    C --> D["propagate_through_target\nE_out = E_in · e^(−k β t) · e^(−i k δ t)"]
     D --> B
     B -->|after last target| E{Detector category?}
-    E -->|PCI| F["spectral_propagate_to_position\n(pixel size preserved)"]
-    E -->|SAXS| G["lorentz_propagate_to_position\n(Fresnel, pixel size rescaled)"]
-    F --> H["Detector.set_raw_data\nI = E_r^2 + E_i^2"]
+    E -->|PCI / none| F["spectral_propagate_to_position\n(pixel size preserved)"]
+    E -->|SAXS| G["lorentz_propagate_to_position\n(Fresnel, pixel size rescaled)\n+ resample onto reference grid"]
+    F --> H["sum w(E)·|E|² over energies\n+ build RGB dispersion"]
     G --> H
-    H --> I["plot(): intensity, phase,\nRGB chromatic dispersion"]
+    H --> I["Detector.set_raw_data\n(effective field, grid, rgb, intensity)"]
+    I --> J["plot(): intensity, phase,\nRGB chromatic dispersion"]
 ```
+
+Targets are kept sorted by $z$ (`Beamline._sorted_targets`); targets beyond
+the requested plane are skipped. Positions and distances are validated
+non-negative.
 
 ### Sequence of a `Beamline.propagate_XFEL_to(detector)` call
 
@@ -284,22 +366,25 @@ sequenceDiagram
     participant D as Detector
 
     BL->>X: propagate_to(sorted_targets, detector)
-    loop each sampled photon energy
-        X->>X: initialize_to_position (source field)
-        loop each target
+    loop each spectral sample w(E)
+        X->>X: initialize_to_position (source field at E)
+        loop each target with z ≤ plane
             X->>X: spectral_propagate_to_position (vacuum)
             X->>T: get_absorption / get_phase_shift
-            T-->>X: e^(-mu t/2), k delta t
+            T-->>X: e^(−k β t), k δ t
             X->>X: propagate_through_target
         end
-        alt PCI detector
+        alt PCI detector / no detector
             X->>X: spectral_propagate_to_position
         else SAXS detector
             X->>X: lorentz_propagate_to_position
         end
     end
-    X->>X: sum intensities + build RGB
-    X->>D: set_raw_data(field, grid, rgb)
+    opt SAXS
+        X->>X: resample fields onto reference detector grid
+    end
+    X->>X: sum w(E)·|E|² + build RGB, phase from reference sample
+    X->>D: set_raw_data(effective field, X, Y, ΔX, N, rgb, intensity)
     BL->>D: plot()
 ```
 
@@ -309,12 +394,15 @@ sequenceDiagram
 
 | Physics | Equation | Function |
 | --- | --- | --- |
-| Wavenumber | $k = 2\pi/\lambda$ | `get_k` |
-| Phase decrement | $\delta \propto N_a \rho \frac{Z}{A} r_e \lambda^2$ | `get_n_refraction_delta` |
-| Absorption | $\beta = \mu_1 \rho / E^{\mu_2}$ | `get_n_refraction_beta` |
-| Target phase | $\Delta\phi = k\,\delta\, t$ | `get_phase_shift` |
-| Target amplitude | $T = e^{-\mu t/2}$ | `get_absorption` |
+| Wavenumber | $k = 2\pi E / hc$, $hc = 1.239842$ keV·nm | `get_k` |
+| Phase decrement | $\delta = C\, N_a \rho \frac{Z}{A} r_e \frac{\lambda^2}{2\pi}$ | `get_n_refraction_delta` |
+| Absorption index | $\beta = \mu_1 \rho / E^{\mu_2}$ | `get_n_refraction_beta` |
+| Phase coefficient | $k\,\delta$ | `Material._get_phase_shift` |
+| Intensity attenuation | $\mu = 2 k \beta$ | `Material._get_mu` |
+| Target phase | $\Delta\phi = \sum_i k\,\delta_i\, t_i$ | `Target.get_phase_shift` |
+| Target amplitude | $T = e^{-\frac12\sum_i \mu_i t_i}$ | `Target.get_absorption` |
+| Wire projection | $t(s) = 2\sqrt{R^2 - s^2}$ | `wire._get_projection` |
 | Angular spectrum | $E = \mathcal{F}^{-1}[\mathcal{F}E_0\, e^{ik_z z}]$ | `spectral_propagate_to_position` |
-| Fresnel single-FFT | $E = \frac{e^{ikz}}{i\lambda z} e^{i\frac{k}{2z}r^2}\mathcal{F}[E_0 e^{i\frac{k}{2z}r^2}]$ | `lorentz_propagate_to_position` |
-| Gaussian beam | $q(z),\ w(z),\ R(z),\ z_R=\pi w_0^2/\lambda$ | `initialize_to_position` |
-
+| Fresnel single-FFT | $E = \frac{e^{ikz}}{i\lambda z} e^{i\frac{k}{2z}R^2}\,\Delta x^2\,\mathcal{F}[E_0 e^{i\frac{k}{2z}r^2}]$ | `lorentz_propagate_to_position` |
+| Gaussian beam | $w(z),\ 1/R(z)=\frac{z}{z^2+z_R^2},\ z_R=\pi w_0^2/\lambda$, Gouy $\arctan(z/z_R)$ | `gaussian_XFEL.initialize_to_position` |
+| Spectral weights | $w(E) = e^{-4\ln 2\,(E-E_0)^2/\text{FWHM}^2}$ | `_spectral_samples` |
