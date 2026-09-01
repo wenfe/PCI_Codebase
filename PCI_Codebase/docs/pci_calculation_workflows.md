@@ -26,10 +26,9 @@ flowchart TD
     C --> D{PCI definition}
     D --> E[Target-exit intensity<br/>no propagation]
     D --> F[Exact angular-spectrum propagation<br/>same 8 nm sampling]
-    D --> G[Archived LightPipes Fresnel propagation]
     E --> H[Left/right half-plane sums<br/>versus wire offset]
     F --> I[Detector-plane PCI image<br/>and lineouts]
-    G --> J[Legacy detector PCI image]
+
 ```
 
 ## PCI families and numerical settings
@@ -41,8 +40,7 @@ flowchart TD
 | Methods PCI/SAXS gallery | Gaussian beam for the selected divergence case | Case dependent | Immediately after target in the current gallery | None | Show target-exit attenuation beside SAXS |
 | Realistic-profile PCI | Measured TIFF amplitude and 7.5-micrometre Gaussian phase curvature | Phase reference: 7.5 micrometres | Immediately after target | None | Left/right offset scan using measured illumination |
 | Experimental-comparison PCI | Divergent Gaussian amplitude and phase | 7.5 micrometres | Immediately after target | None | Compare simulated total transmission with Zyla motor scan r0484 |
-| Archived PCI | Gaussian field and voxelized Cu wire | Notebook dependent | Legacy PCI detector plane | LightPipes Fresnel convolution | Reproduce historical figures only |
-| Idealized propagation/transmission | Analytic Gaussian, analytic wire chord | Active cell: 10 micrometres | 6.31 m | Direct single-FFT Fresnel function | Historical transmission/absorption study |
+
 
 The target-exit calculations measure absorption and beam/wire overlap. A
 detector-plane PCI calculation additionally converts target-induced phase into
