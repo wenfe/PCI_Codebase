@@ -7,13 +7,33 @@ and the archived Mark1300-compatible workflow.
 It records the numerical settings and the reduction choices that can change
 the apparent left/right asymmetry.
 
+## Current symmetric-boundary configuration
+
+The unified calculation notebook, `SAXS_asymmetry/01_calculate_and_save_data.ipynb`,
+applies a fixed symmetric Gaussian blur to the projected wire thickness:
+
+| Boundary | Gaussian sigma | Target-grid equivalent |
+|---|---:|---:|
+| Left edge | 4 nm | 0.5 pixel at 8 nm/pixel |
+| Right edge | 4 nm | 0.5 pixel at 8 nm/pixel |
+
+The sigma values are standard deviations, not FWHM values. The ideal chord is
+Gaussian-filtered with 4 nm sigma on both sides. SAXS propagation therefore starts
+from a complex exit field whose absorption and phase both include the blurred
+boundaries. This is the same target model used by the PCI calculations.
+
+All tables, TIFFs, plot-data bundles, and figures for this pair are kept under
+`SAXS_asymmetry/outputs/sigmaL_4nm_sigmaR_4nm/`. Notebook 02 validates the
+calculation manifest there before plotting, preventing sigma configurations
+from being mixed.
+
 ## Calculation-family map
 
 ```mermaid
 flowchart TD
     A[Incident field] --> A1[Gaussian<br/>divergent or quasi-collimated]
     A --> A2[Measured TIFF amplitude<br/>plus Gaussian curved phase]
-    A1 --> B[Shift and project 10 micrometre Cu wire]
+    A1 --> B[Shift and project 10 micrometre Cu wire<br/>4 nm symmetric sigma]
     A2 --> B
     B --> C[Apply complex Cu transmission]
     C --> D[Single-FFT Fresnel propagation<br/>1.31 m]
@@ -33,12 +53,12 @@ flowchart TD
 
 | SAXS family | Incident field | Target FWHM | Detector propagation | Lineout/regridding | Main purpose |
 |---|---|---:|---:|---|---|
-| Clean Gaussian design | Four Gaussian amplitude-and-phase cases | 6.0 or 7.5 micrometres | 1.31 m single-FFT Fresnel | Current notebook reduction | Controlled divergence comparison |
-| Methods: offset scan | Divergent Gaussian | 6.0 micrometres baseline | 1.31 m | 10-row display lineout; Mark1300 asymmetry uses 2 central rows | Wire-position asymmetry |
+| Clean Gaussian design | Four Gaussian amplitude-and-phase cases | 6.0 or 7.11 micrometres | 1.31 m single-FFT Fresnel | Current notebook reduction | Controlled divergence comparison |
+| Methods: offset scan | Divergent Gaussian | 7.11 micrometres baseline | 1.31 m | 10-row display lineout; Mark1300 asymmetry uses 2 central rows | Wire-position asymmetry |
 | Methods: divergence scan | Divergent 6, 9, 12 micrometres plus 12 micrometre quasi-collimated case | Case dependent | 1.31 m | Same Methods reduction | Separate spot size and curvature effects |
 | Methods: PCI/SAXS gallery | Selected Gaussian cases | Case dependent | 1.31 m for SAXS | Detector images and central profiles | Visual comparison of target exit and far field |
-| Experimental comparison | Divergent Gaussian | 7.5 micrometres | 1.31 m | Validated experimental profiles plus simulated detector images | Compare SAXS reference metrics and target-exit transmission |
-| Realistic-profile SAXS | Measured TIFF amplitude plus divergent 7.5-micrometre Gaussian phase | Phase reference: 7.5 micrometres | 1.31 m | 10-row mean, explicit linear interpolation to experimental q | Measured incident-beam study |
+| Experimental comparison | Divergent Gaussian | 7.11 micrometres | 1.31 m | Validated experimental profiles plus simulated detector images | Compare SAXS reference metrics and target-exit transmission |
+| Realistic-profile SAXS | Measured TIFF amplitude plus divergent 7.11-micrometre Gaussian phase | Phase reference: 7.11 micrometres | 1.31 m | 10-row mean, explicit linear interpolation to experimental q | Measured incident-beam study |
 | Archived Mark1300 workflow | Gaussian source and voxelized Cu wire | Notebook dependent | Legacy Fresnel/Lorentz path | Historical row, q-axis, and TIFF conventions | Reproduce old results |
 
 ## Physics shared by every SAXS family
@@ -57,7 +77,9 @@ Unless a notebook explicitly overrides a setting, the current SAXS designs use:
 | Target-plane field of view | 32.768 micrometres |
 | Source-to-target distance | 0.25 m |
 | Cu-wire radius | 5 micrometres |
-| Wire voxel size | 20 nm |
+| Wire voxel size | 8 nm |
+| Left boundary sigma | 4 nm |
+| Right boundary sigma | 4 nm |
 | Target-to-detector distance | 1.31 m |
 
 The Gaussian convention and source-waist solutions are:
@@ -65,12 +87,12 @@ The Gaussian convention and source-waist solutions are:
 | Target FWHM | Divergent/small root | Quasi-collimated/large root |
 |---:|---:|---:|
 | 6.0 micrometres | 2.846721 micrometres | 4.226664 micrometres |
-| 7.5 micrometres | 1.988233 micrometres | 6.051671 micrometres |
+| 7.11 micrometres | 2.129270 micrometres | 5.650827 micrometres |
 
-For each Gaussian case, the peak incident intensity is normalized to 1. This
-changes only the common intensity scale; it does not change FWHM or curvature.
-The realistic branch instead keeps the measured spatial intensity shape and
-normalizes its peak to 1, while taking phase curvature from the 7.5 micrometre
+For each Gaussian case, the incident field is generated consistently by the
+shared Gaussian-beam constructor; its scale does not change FWHM or curvature.
+The realistic branch keeps the measured spatial intensity shape, normalizes
+its discrete sum to 1, and takes phase curvature from the 7.11 micrometre
 divergent reference.
 
 ### Copper transmission
@@ -92,8 +114,8 @@ with
 \mu=4.09064\times10^{-5}\ \mathrm{nm^{-1}}.
 \]
 
-At the wire centre, the 20 nm discretization produces approximately
-10.02 micrometres of Cu thickness.
+Before edge blurring, the 8 nm sampled chord has a 10.0 micrometre centre
+thickness. The small boundary blur has negligible influence at the centre.
 
 ### Single-FFT Fresnel propagation
 
@@ -119,24 +141,121 @@ so the 4096-pixel detector field of view is about 24.7590 mm.
 
 ## Family 1: clean Gaussian SAXS designs
 
-`SAXS_asymmetry/clean_saxs_design.ipynb` constructs four controlled beams:
+Section 1 of `SAXS_asymmetry/01_calculate_and_save_data.ipynb` constructs four
+controlled beams:
 
 | Case | Target FWHM | Waist root | Source waist |
 |---|---:|---|---:|
 | Divergent 6.0 | 6.0 micrometres | Small | 2.846721 micrometres |
-| Divergent 7.5 | 7.5 micrometres | Small | 1.988233 micrometres |
+| Divergent 7.11 | 7.11 micrometres | Small | 2.129270 micrometres |
 | Quasi-collimated 6.0 | 6.0 micrometres | Large | 4.226664 micrometres |
-| Quasi-collimated 7.5 | 7.5 micrometres | Large | 6.051671 micrometres |
+| Quasi-collimated 7.11 | 7.11 micrometres | Large | 5.650827 micrometres |
 
 Every case applies the same Cu target and 1.31 m Fresnel propagation. Therefore
 differences in its SAXS curves can be attributed to spot size and wavefront
 curvature rather than to a different material or propagation model.
 
+## Quick symmetric-sigma Mark1300 check
+
+`SAXS_asymmetry/quick_symmetric_sigma_check.py` compares the symmetric boundary
+models
+
+\[
+\sigma_L=\sigma_R\in\{0,3,3.8,4,6,8,14\}\ \mathrm{nm}
+\]
+
+for the divergent 6.0, 7.0, and 7.11 micrometre Gaussian beams. All three use
+43 offsets from -10.0 through +10.16 micrometres at 0.48 micrometre spacing. It uses the same
+4096-point x grid, Cu complex transmission, 1.31 m single-FFT Fresnel phase,
+and two-row-equivalent Mark1300 reduction as the clean full calculation. Its
+default `Q_MASK_SHIFT_NM_INV = 0.005` moves the excluded q interval to
+approximately \([-0.095,+0.105]\ \mathrm{nm^{-1}}\).
+
+The quick path is possible because the straight projected wire and Gaussian
+field are separable in x and y. The central detector lineout can be written as
+a product of one x Fourier factor and one common y Fourier factor. The y factor
+cancels between the left and right sums, so a 4096-point one-dimensional FFT
+gives the same fraction as the full 4096 x 4096 propagation:
+
+\[
+f_{L,\mathrm{Mark1300}}
+=\frac{\sum w_L(q_x)I(q_x)}
+{\sum w_L(q_x)I(q_x)+\sum w_R(q_x)I(q_x)},
+\]
+
+where the default fractional-bin masks begin at \(-0.095\) and
+\(+0.105\ \mathrm{nm^{-1}}\), respectively.
+
+The implementation was checked against the saved full 2-D shifted-mask,
+asymmetric \(\sigma_L=4\) nm, \(\sigma_R=8\) nm results. The maximum absolute
+differences are `2.02e-7` for the 6.0 micrometre beam and `1.98e-7` for the
+7.11 micrometre beam.
+
+Representative symmetric-sigma results use the nearest sampled positions to
+requested offsets −2, 0, and +2 µm. On this bound-anchored grid those samples
+are −1.84, +0.08, and +2.00 µm, respectively:
+
+| Beam FWHM | Symmetric sigma | −1.84 micrometres | +0.08 micrometres | +2.00 micrometres |
+|---:|---:|---:|---:|---:|
+| 6.0 micrometres | 0 nm | 0.43214635 | 0.54911457 | 0.64793538 |
+| 6.0 micrometres | 3 nm | 0.42095574 | 0.55256736 | 0.66310238 |
+| 6.0 micrometres | 3.8 nm | 0.39288038 | 0.56161767 | 0.70103186 |
+| 6.0 micrometres | 4 nm | 0.38472864 | 0.56436900 | 0.71201510 |
+| 6.0 micrometres | 6 nm | 0.32216132 | 0.58854545 | 0.79609849 |
+| 6.0 micrometres | 8 nm | 0.28386986 | 0.60854864 | 0.84711404 |
+| 6.0 micrometres | 14 nm | 0.19537514 | 0.67227849 | 0.94384489 |
+| 7.0 micrometres | 0 nm | 0.44644264 | 0.54709639 | 0.63603896 |
+| 7.0 micrometres | 3 nm | 0.43706879 | 0.55031011 | 0.64986928 |
+| 7.0 micrometres | 3.8 nm | 0.41365335 | 0.55876512 | 0.68454698 |
+| 7.0 micrometres | 4 nm | 0.40688676 | 0.56134490 | 0.69461662 |
+| 7.0 micrometres | 6 nm | 0.35573451 | 0.58423127 | 0.77233979 |
+| 7.0 micrometres | 8 nm | 0.32583655 | 0.60349159 | 0.82054466 |
+| 7.0 micrometres | 14 nm | 0.26460310 | 0.66603536 | 0.91679459 |
+| 7.11 micrometres | 0 nm | 0.44805875 | 0.54692879 | 0.63464171 |
+| 7.11 micrometres | 3 nm | 0.43889201 | 0.55012233 | 0.64831118 |
+| 7.11 micrometres | 3.8 nm | 0.41600684 | 0.55852699 | 0.68259667 |
+| 7.11 micrometres | 4 nm | 0.40939758 | 0.56109223 | 0.69255582 |
+| 7.11 micrometres | 6 nm | 0.35953497 | 0.58386872 | 0.76950362 |
+| 7.11 micrometres | 8 nm | 0.33057285 | 0.60306499 | 0.81735546 |
+| 7.11 micrometres | 14 nm | 0.27229116 | 0.66550192 | 0.91348174 |
+
+![Symmetric-sigma Mark1300 comparison](../SAXS_asymmetry/outputs/quick_symmetric_sigma/mark1300_symmetric_sigma.png)
+
+Erik's measured `motor_offsets_um` and `motor_left_fraction` are overlaid as
+black crosses on all three absolute-fraction panels. The figure contains no lower
+difference row; numerical changes from the sigma 8 nm reference remain in
+`mark1300_sigma_effect_summary.csv`.
+
+Relative to sigma 8 nm, the largest absolute change over the scan is about
+0.213 for sigma 0 nm, 0.196 for sigma 3 nm, 0.155 for sigma 3.8 nm, 0.143 for
+sigma 4 nm, 0.0533 for sigma 6 nm, and 0.120 for sigma 14 nm. The Mark1300
+fraction is therefore strongly sensitive to symmetric edge sigma away from
+zero offset.
+
+The small kinks near offsets of +/-3 micrometres occur when the 10 micrometre
+wire begins to cross the finite 16 micrometre target-projection boundary. The
+quick reduction intentionally preserves the `RectBivariateSpline` boundary
+behavior of the full 2-D path; the kink should not be interpreted as a new
+edge-blur effect.
+
+Run the sweep from the repository root with:
+
+```powershell
+.\.venv\Scripts\python.exe SAXS_asymmetry\quick_symmetric_sigma_check.py
+```
+
+Override the mask shift, for example to recover a centered mask, with
+`--q-mask-shift-nm-inv 0`.
+
+The Mark1300 tables, summary CSV files, and comparison figure are written below
+`SAXS_asymmetry/outputs/quick_symmetric_sigma/` with the `mark1300_` prefix.
+
 ## Family 2: `SAXS_Asymmetry_Methods` analyses
 
-`SAXS_asymmetry/SAXS_Asymmetry_Methods.ipynb` contains three related studies:
+Section 2 of `SAXS_asymmetry/01_calculate_and_save_data.ipynb` contains three
+related studies:
 
-1. transverse wire offset in the 6 micrometre divergent beam,
+1. transverse wire offset in the 7.11 micrometre divergent beam,
 2. divergence/spot-size dependence using 6, 9, and 12 micrometre cases plus a
    12 micrometre large-root reference, and
 3. a target-exit PCI and detector-SAXS image gallery.
@@ -158,26 +277,27 @@ These multipliers affect plotted amplitude but not the left/right fraction.
 
 ## Family 3: Gaussian simulation/experiment comparison
 
-`SAXS_asymmetry/SAXS_PCI_Experimental_Comparison.ipynb` uses a divergent
-7.5 micrometre Gaussian, 4096 x 4096 points, 8 nm target pixels, a 0.25 m
+Section 5 of `SAXS_asymmetry/01_calculate_and_save_data.ipynb` uses a divergent
+7.11 micrometre Gaussian, 4096 x 4096 points, 8 nm target pixels, a 0.25 m
 source-to-wire distance, and 1.31 m SAXS propagation. Its SAXS path uses the
-same 20 nm voxelized wire and `PCI.py` interpolation as the clean design. It
+same 8 nm, asymmetrically blurred wire and `PCI.py` interpolation as the clean
+design. It
 loads cleaned experimental SAXS payloads for runs 528, 534, and 546, preserves
 each run's native signed-q values, and reports left fraction, weighted RMS,
 unweighted RMS, and fitted centre. It does not force all experimental runs
 onto one common q grid for these reference metrics.
 
-The same notebook makes detector images at nine wire offsets from -10 to
-+10 micrometres in 2.5 micrometre steps. Its parallel PCI calculation is
-sample-exit intensity, and its transmission scan uses 49 points from -12 to
-+12 micrometres for comparison with the r0484 Zyla motor scan.
+The same section reuses the clean SAXS detector images and makes sample-exit
+PCI images at the same 43 offsets from -10.0 through +10.16 micrometres in
+0.48 micrometre steps. Its transmission scan uses 49 points from -10 to +10 micrometres for
+comparison with the r0484 Zyla motor scan.
 
 ## Family 4: realistic measured-profile SAXS
 
-`SAXS_asymmetry/realistic_profile_saxs_pci_design.ipynb` uses measured TIFF
-intensity for the target-plane amplitude and the 7.5 micrometre divergent
-Gaussian only for phase curvature. It propagates every one of 41 wire offsets
-from -10 to +10 micrometres in 0.5 micrometre steps. The detector lineout is
+Section 4 of `SAXS_asymmetry/01_calculate_and_save_data.ipynb` uses measured
+TIFF intensity for the target-plane amplitude and the 7.11 micrometre
+divergent Gaussian only for phase curvature. It propagates 43 wire offsets
+from -10.0 through +10.16 micrometres in 0.48 micrometre steps. The detector lineout is
 the mean of 10 central rows. The notebook now defines the raw axis explicitly
 as
 
@@ -232,16 +352,19 @@ mask, which evaluates to about 522 pixels on the current 4096-point, 8 nm grid.
 | Simulation grid | 4096 x 4096 pixels |
 | Simulation pixel size | 8 nm |
 | Simulation field of view | 32.768 micrometres |
-| Incident phase-reference FWHM | 7.5 micrometres |
-| Phase-reference source waist | 1.988233 micrometres |
-| Target wavefront radius | 0.276985 m |
+| Incident phase-reference FWHM | 7.11 micrometres |
+| Phase-reference source waist | 2.129270 micrometres |
+| Target wavefront radius | 0.285496 m |
 | Copper-wire radius | 5 micrometres |
+| Wire voxel size | 8 nm |
+| Left boundary sigma | 4 nm |
+| Right boundary sigma | 4 nm |
 | Target-to-detector distance | 1.31 m |
 | Fresnel detector pixel size | 6.04469 micrometres |
 | Fresnel detector field of view | 24.7590 mm |
-| Wire offsets | -10 to +10 micrometres |
-| Offset step | 0.5 micrometres |
-| Number of offsets | 41 |
+| Wire offsets | -10.0 through +10.16 micrometres |
+| Offset step | 0.48 micrometres |
+| Number of offsets | 43 |
 | Detector rows averaged | 10 central rows |
 | Raw q range | -0.392699 to +0.392699 nm^-1 |
 | Raw q spacing | 0.0001917944 nm^-1 |
@@ -257,13 +380,13 @@ flowchart TD
     B --> C["Normalize intensity<br/>sum over pixels equals 1"]
     C --> D["Measured amplitude<br/>square root of intensity"]
 
-    P["Divergent Gaussian phase reference<br/>7.5 micrometre target FWHM"] --> P1["Source waist<br/>1.988233 micrometres"]
-    P1 --> P2["Wavefront radius at target<br/>0.276985 m"]
+    P["Divergent Gaussian phase reference<br/>7.11 micrometre target FWHM"] --> P1["Source waist<br/>2.129270 micrometres"]
+    P1 --> P2["Wavefront radius at target<br/>0.285496 m"]
     D --> E["Complex incident field"]
     P2 --> E
 
-    E --> F{"41 copper-wire offsets<br/>-10 to +10 micrometres"}
-    F --> G["Apply copper absorption<br/>and phase shift"]
+    E --> F{"43 copper-wire offsets<br/>-10.0 through +10.16 micrometres"}
+    F --> G["Apply blurred Cu thickness<br/>4 nm symmetric sigma"]
     G --> H["Complex exit field<br/>immediately after wire"]
     H --> I["Single-FFT Fresnel propagation<br/>1.31 m"]
     I --> J["Detector intensity<br/>absolute propagated field squared"]
@@ -324,7 +447,7 @@ where
 
 ```text
 k = 41.55539 nm^-1
-R = 0.276985 m.
+R = 0.285496 m.
 ```
 
 Therefore,
@@ -347,8 +470,10 @@ The wire radius is 5 micrometres, giving an ideal projected thickness
 t(x)=2\sqrt{r^2-x^2}
 ```
 
-inside the wire. The numerical target uses 20 nm voxels and a 2000 x 2000
-projection map. Its discretized centre thickness is approximately 10020 nm.
+inside the wire. The numerical target samples this chord at 8 nm on a 2000 x
+2000 projection map, giving a 10000 nm unblurred centre thickness. It then
+uses a 4 nm Gaussian-filtered profile for both sides. The resulting thickness map is
+used by both terms of the complex copper transmission.
 
 At 8.2 keV, the implemented copper coefficients are approximately
 
@@ -380,8 +505,8 @@ E_{\mathrm{exit}}(x,y)
 =E_{\mathrm{in}}(x,y)T(x,y).
 ```
 
-This calculation is repeated for 41 wire positions from -10 to +10
-micrometres in 0.5 micrometre steps.
+This calculation is repeated for 43 wire positions from -10.0 through +10.16
+micrometres in 0.48 micrometre steps.
 
 ## 3. Fresnel propagation to the SAXS detector
 
@@ -582,7 +707,12 @@ I_{\mathrm{normalized}}(q_x)
 
 No run-specific multiplicative scale factors are applied.
 
-## 9. Regenerated SAXS results
+## 9. Previously recorded pre-blur SAXS results
+
+The values below came from the earlier 41-offset, sharp/20 nm wire run. They
+are retained only as a historical reference and are **not** results for the
+current symmetric 4 nm boundary configuration. Run notebook 01 and read
+the sigma-tagged table for current values.
 
 At zero wire offset:
 
@@ -595,7 +725,7 @@ At zero wire offset:
 The small absolute sums reflect the propagator's field scale. The ratio is the
 primary result.
 
-Across the 41-offset scan:
+Across that earlier 41-offset scan:
 
 | Quantity | Minimum | Maximum |
 |---|---:|---:|
@@ -606,20 +736,20 @@ Across the 41-offset scan:
 The combined figure is
 
 ```text
-SAXS_asymmetry/outputs/realistic_profile/figures/
-01_realistic_pci_saxs_left_right.png
+SAXS_asymmetry/outputs/sigmaL_4nm_sigmaR_4nm/realistic_profile/figures/
+02_realistic_pci_saxs_left_right.png
 ```
 
 Its SAXS-related panels are:
 
 1. **Panel 1: SAXS left/right versus wire offset**
    - realistic-profile left and right signals;
-   - divergent 7.5 micrometre Gaussian-reference signals;
+   - divergent 7.11 micrometre Gaussian-reference signals;
    - each family is divided by its own maximum total signal.
 
 2. **Panel 2: SAXS left fraction versus wire offset**
    - realistic-profile simulation;
-   - Gaussian 7.5 micrometre reference;
+   - Gaussian 7.11 micrometre reference;
    - Erik collimated simulation;
    - Lingen Mark1300 6 micrometre result;
    - experimental motor scan.
@@ -632,9 +762,9 @@ Its SAXS-related panels are:
 
 ## Outputs
 
-- Detector TIFFs: `SAXS_asymmetry/outputs/realistic_profile/detector_tiffs/`
-- SAXS table: `SAXS_asymmetry/outputs/realistic_profile/tables/realistic_profile_saxs_left_right.dat`
-- Combined figure: `SAXS_asymmetry/outputs/realistic_profile/figures/01_realistic_pci_saxs_left_right.png`
+- Detector TIFFs: `SAXS_asymmetry/outputs/sigmaL_4nm_sigmaR_4nm/realistic_profile/detector_tiffs/`
+- SAXS table: `SAXS_asymmetry/outputs/sigmaL_4nm_sigmaR_4nm/realistic_profile/tables/realistic_profile_saxs_left_right.dat`
+- Combined figure: `SAXS_asymmetry/outputs/sigmaL_4nm_sigmaR_4nm/realistic_profile/figures/02_realistic_pci_saxs_left_right.png`
 
 The SAXS table columns are:
 

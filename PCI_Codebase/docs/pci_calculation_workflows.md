@@ -14,6 +14,27 @@ The calculations share the same copper transmission model, but their source
 fields, propagation algorithms, distances, and output sampling are not all the
 same. These differences must be retained when comparing figures.
 
+## Current symmetric-boundary configuration
+
+The unified calculation notebook, `SAXS_asymmetry/01_calculate_and_save_data.ipynb`,
+uses a fixed symmetric Gaussian blur on the projected wire thickness:
+
+| Boundary | Gaussian sigma | Target-grid equivalent |
+|---|---:|---:|
+| Left edge | 4 nm | 0.5 pixel at 8 nm/pixel |
+| Right edge | 4 nm | 0.5 pixel at 8 nm/pixel |
+
+These values are Gaussian standard deviations, not FWHM values. The ideal
+cylindrical chord is blurred with the configured sigma on both sides. The
+blurred thickness is then used for copper
+absorption and phase, so the same asymmetric boundary model affects clean PCI,
+target-exit PCI, realistic-profile PCI, and the PCI/SAXS comparison paths.
+
+All generated artifacts are isolated under
+`SAXS_asymmetry/outputs/sigmaL_4nm_sigmaR_4nm/`. Notebook 02 reads only this
+directory and checks `combined_plot_data/calculation_manifest.json` before
+plotting, which prevents results from different sigma pairs from being mixed.
+
 ## Calculation-family map
 
 ```mermaid
@@ -35,11 +56,11 @@ flowchart TD
 
 | PCI family | Incident field | Target FWHM | PCI plane or distance | Propagator | Main use |
 |---|---|---:|---:|---|---|
-| Clean propagated PCI | Divergent Gaussian amplitude and phase | 7.5 micrometres | 6.31 m after target | Exact angular spectrum | Detector-plane phase-contrast image |
-| Methods offset scan | Divergent Gaussian amplitude and phase | 6.0 micrometres | Immediately after target | None | Isolate left/right response to wire offset |
+| Clean propagated PCI | Divergent Gaussian amplitude and phase | 7.11 and 6.0 micrometres | 6.31 m after target | Exact angular spectrum | Detector-plane phase-contrast image |
+| Methods offset scan | Divergent Gaussian amplitude and phase | 7.11 micrometres | Immediately after target | None | Isolate left/right response to wire offset |
 | Methods PCI/SAXS gallery | Gaussian beam for the selected divergence case | Case dependent | Immediately after target in the current gallery | None | Show target-exit attenuation beside SAXS |
-| Realistic-profile PCI | Measured TIFF amplitude and 7.5-micrometre Gaussian phase curvature | Phase reference: 7.5 micrometres | Immediately after target | None | Left/right offset scan using measured illumination |
-| Experimental-comparison PCI | Divergent Gaussian amplitude and phase | 7.5 micrometres | Immediately after target | None | Compare simulated total transmission with Zyla motor scan r0484 |
+| Realistic-profile PCI | Measured TIFF amplitude and 7.11-micrometre Gaussian phase curvature | Phase reference: 7.11 micrometres | Immediately after target | None | Left/right offset scan using measured illumination |
+| Experimental-comparison PCI | Divergent Gaussian amplitude and phase | 7.11 micrometres | Immediately after target | None | Compare simulated total transmission with Zyla motor scan r0484 |
 
 
 The target-exit calculations measure absorption and beam/wire overlap. A
@@ -83,7 +104,7 @@ quasi-collimated root. The roots used by the notebooks are:
 | Target FWHM | Divergent/small root | Quasi-collimated/large root |
 |---:|---:|---:|
 | 6.0 micrometres | 2.846721 micrometres | 4.226664 micrometres |
-| 7.5 micrometres | 1.988233 micrometres | 6.051671 micrometres |
+| 7.11 micrometres | 2.129270 micrometres | 5.650827 micrometres |
 
 The complex Gaussian field contains both amplitude and curvature phase,
 
@@ -98,9 +119,11 @@ peak equals 1 while the requested FWHM remains unchanged.
 
 ### Copper-wire target
 
-The wire radius is 5 micrometres. A 20 nm voxel model is projected through the
-wire to obtain the thickness map \(t(x,y)\). Its discretized centre thickness
-is approximately 10.02 micrometres. At 8.2 keV the code uses
+The wire radius is 5 micrometres. An 8 nm sampled chord model is projected
+through the wire to obtain the thickness map \(t(x,y)\). Before the map is
+shifted or interpolated, its left and right boundaries are blurred with
+\(\sigma_L=\sigma_R=4\ \mathrm{nm}\).
+The unblurred centre thickness is 10 micrometres. At 8.2 keV the code uses
 
 \[
 \delta=2.35659\times10^{-5},\qquad
@@ -121,10 +144,11 @@ The factor \(1/2\) appears in the amplitude attenuation; after taking
 
 ## Family 1: clean detector-propagated Gaussian PCI
 
-`SAXS_asymmetry/clean_pci_design.ipynb` uses a 4096 x 4096 grid with 8 nm
-pixels, a divergent Gaussian with 7.5 micrometre target FWHM, and the
-1.988233 micrometre small-root source waist. After applying the Cu target, it
-propagates the exit field 6.31 m with the exact angular-spectrum method:
+Section 3 of `SAXS_asymmetry/01_calculate_and_save_data.ipynb` uses a 4096 x
+4096 grid with 8 nm pixels. It calculates divergent Gaussian cases with 7.11
+and 6.0 micrometre target FWHM; the corresponding small-root source waists are
+2.129270 and 2.846721 micrometres. After applying the blurred Cu target, it
+propagates each exit field 6.31 m with the exact angular-spectrum method:
 
 \[
 U_z=\mathcal F^{-1}\left\{
@@ -165,21 +189,21 @@ The notebook also studies 9 and 12 micrometre target spots and includes a
 
 ## Family 3: realistic measured-profile target-exit PCI
 
-`SAXS_asymmetry/realistic_profile_saxs_pci_design.ipynb` keeps the measured
-TIFF intensity, rescales it from 10 nm to the 8 nm simulation grid, and uses
-only the curved phase of the 7.5 micrometre divergent Gaussian. This branch is
-described numerically and step by step in the remainder of this document.
+Section 4 of `SAXS_asymmetry/01_calculate_and_save_data.ipynb` keeps the
+measured TIFF intensity, rescales it from 10 nm to the 8 nm simulation grid,
+and uses only the curved phase of the 7.11 micrometre divergent Gaussian. This
+branch is described numerically and step by step below.
 
 ## Family 4: Gaussian simulation/experiment comparison
 
-`SAXS_asymmetry/SAXS_PCI_Experimental_Comparison.ipynb` uses a divergent
-7.5 micrometre Gaussian on the 4096 x 4096, 8 nm grid. Its PCI observable is
+Section 5 of `SAXS_asymmetry/01_calculate_and_save_data.ipynb` uses a divergent
+7.11 micrometre Gaussian on the 4096 x 4096, 8 nm grid. Its PCI observable is
 again the total sample-exit intensity, not a propagated detector image. It
-uses an analytic cylindrical chord for the PCI/transmission path, scans image
-offsets from -10 to +10 micrometres in 2.5 micrometre steps, and evaluates the
-transmission comparison on 49 offsets from -12 to +12 micrometres. Simulated
-and experimental r0484 transmission are each normalized by their own maximum
-because no absolute intensity calibration is applied.
+uses an analytic cylindrical chord with the same symmetric 4 nm blur,
+scans 41 image offsets from -10 to +10 micrometres in 0.5 micrometre steps,
+and evaluates the transmission comparison on 49 offsets from -10 to +10
+micrometres. Simulated and experimental r0484 transmission are each normalized
+by their own maximum because no absolute intensity calibration is applied.
 
 ## Family 5: archived LightPipes and idealized PCI
 
@@ -197,7 +221,7 @@ Gaussian FWHM, a 10 micrometre analytic Cu chord, 6.31 m propagation, and a
 derived from \(\Delta x=\lambda z/(N\Delta X)\), approximately 286.7 nm. It
 uses historical Cu constants \(\mu=1/(26.05\ \mathrm{micrometres})\) and
 \(\delta=2.1401\times10^{-5}\), so it is not numerically interchangeable with
-the current 20 nm voxel/material model.
+the current 8 nm projected-wire/material model.
 
 ## Detailed realistic-profile target-exit PCI calculation
 
@@ -214,16 +238,18 @@ the current 20 nm voxel/material model.
 | Simulation grid | 4096 x 4096 pixels |
 | Simulation pixel size | 8 nm |
 | Simulation field of view | 32.768 micrometres |
-| Curvature reference FWHM at target | 7.5 micrometres |
+| Curvature reference FWHM at target | 7.11 micrometres |
 | Curvature source-to-target distance | 0.25 m |
 | Copper-wire radius | 5 micrometres |
 | Copper-wire diameter | 10 micrometres |
-| Wire voxel size | 20 nm |
+| Wire voxel size | 8 nm |
 | Wire projection grid | 2000 x 2000 voxels |
-| Wire projection field of view | 40 micrometres |
-| Wire offsets | -10 to +10 micrometres |
-| Offset step | 0.5 micrometres |
-| Number of offsets | 41 |
+| Wire projection field of view | 16 micrometres |
+| Left boundary sigma | 4 nm |
+| Right boundary sigma | 4 nm |
+| Wire offsets | -10.0 through +10.16 micrometres at 0.48 micrometre spacing |
+| Offset step | 0.48 micrometres |
+| Number of offsets | 43 |
 
 ## Workflow diagram
 
@@ -234,14 +260,14 @@ flowchart TD
     C --> D["Normalize intensity<br/>sum over all pixels equals 1"]
     D --> E["Measured amplitude<br/>A = sqrt of normalized intensity"]
 
-    P["Divergent 7.5 micrometre-FWHM<br/>phase reference"] --> P1["Source waist<br/>1.988233 micrometres"]
-    P1 --> P2["Rayleigh range<br/>0.082136 m"]
-    P2 --> P3["Target wavefront radius<br/>0.276985 m"]
+    P["Divergent 7.11 micrometre-FWHM<br/>phase reference"] --> P1["Source waist<br/>2.129270 micrometres"]
+    P1 --> P2["Rayleigh range<br/>0.094202 m"]
+    P2 --> P3["Target wavefront radius<br/>0.285496 m"]
 
     E --> F["Incident target-plane field"]
     P3 --> F
-    F --> G{"41 wire offsets<br/>-10 to +10 micrometres"}
-    G --> H["Projected 10 micrometre<br/>copper-wire thickness"]
+    F --> G{"43 wire offsets<br/>-10.0 through +10.16 micrometres"}
+    G --> H["Projected 10 micrometre Cu wire<br/>4 nm symmetric sigma"]
     H --> I["Copper absorption<br/>and phase transmission"]
     I --> J["Complex exit field<br/>immediately after wire"]
     J --> K["Exit intensity<br/>absolute field squared"]
@@ -313,7 +339,7 @@ intensity profile.
 ## 3. Calculate and apply the curved phase
 
 The TIFF contains intensity but no phase map. The workflow therefore uses the
-wavefront curvature of a divergent Gaussian reference with a 7.5 micrometre
+wavefront curvature of a divergent Gaussian reference with a 7.11 micrometre
 target-plane intensity FWHM.
 
 The corresponding 1/e^2 intensity radius is
@@ -321,8 +347,8 @@ The corresponding 1/e^2 intensity radius is
 ```math
 w_t
 =
-\frac{7.5\ \mathrm{micrometres}}{\sqrt{2\ln 2}}
-=6.3699\ \mathrm{micrometres}.
+\frac{7.11\ \mathrm{micrometres}}{\sqrt{2\ln 2}}
+=6.03868\ \mathrm{micrometres}.
 ```
 
 For wavelength `lambda` and distance `z`, Gaussian spreading obeys
@@ -334,17 +360,17 @@ w_t^2=w_0^2+\left(\frac{\lambda z}{\pi w_0}\right)^2.
 Using the smaller, divergent root gives
 
 ```math
-w_0=1.988233\ \mathrm{micrometres}.
+w_0=2.129270\ \mathrm{micrometres}.
 ```
 
 The Rayleigh range and target wavefront radius are
 
 ```math
-z_R=\frac{\pi w_0^2}{\lambda}=0.0821357\ \mathrm{m},
+z_R=\frac{\pi w_0^2}{\lambda}=0.0942017\ \mathrm{m},
 ```
 
 ```math
-R(z)=\frac{z^2+z_R^2}{z}=0.276985\ \mathrm{m}.
+R(z)=\frac{z^2+z_R^2}{z}=0.285496\ \mathrm{m}.
 ```
 
 The incident complex field is
@@ -380,25 +406,25 @@ t(x)=
 The numerical radius is
 
 ```text
-5000 nm / 20 nm = 250 voxels.
+5000 nm / 8 nm = 625 samples.
 ```
 
-The discrete implementation uses
+The sampled implementation uses
 
 ```math
-t_i=
-\left(2\left\lfloor\sqrt{250^2-i^2}\right\rfloor+1\right)
-(20\ \mathrm{nm}).
+t_i=2\sqrt{625^2-i^2}\,(8\ \mathrm{nm})
 ```
 
-This gives a centre thickness of approximately
+This gives the unblurred centre thickness
 
 ```text
-501 x 20 nm = 10020 nm.
+2 x 625 x 8 nm = 10000 nm.
 ```
 
-The projection is shifted to each configured wire offset using bilinear
-interpolation.
+The chord is Gaussian-filtered with 4 nm sigma on both sides. This symmetric
+thickness profile is then shifted to each configured
+wire offset using bilinear interpolation. Consequently, both absorption and
+phase use the same softened boundaries.
 
 ## 5. Apply copper absorption and phase
 
@@ -444,14 +470,14 @@ The field immediately after the wire is
 E_{\mathrm{exit}}(x,y)=E_{\mathrm{in}}(x,y)T(x,y).
 ```
 
-At the discretized wire centre, where the thickness is approximately
-10020 nm:
+At the unblurred wire centre, where the thickness is 10000 nm (the small edge
+blur has negligible influence at the centre):
 
 | Quantity | Approximate value |
 |---|---:|
-| Field-amplitude transmission | 0.8147 |
-| Intensity transmission | 0.6637 |
-| Unwrapped copper phase shift | 9.8125 rad |
+| Field-amplitude transmission | 0.8149 |
+| Intensity transmission | 0.6644 |
+| Unwrapped copper phase shift | 9.7929 rad |
 
 ## 6. Calculate the PCI signals
 
@@ -491,7 +517,12 @@ T_{\mathrm{PCI}}
 
 A common pixel-area factor is not required for these fractions.
 
-## 7. Regenerated results
+## 7. Previously recorded pre-blur results
+
+The values below came from the earlier 41-offset, sharp/20 nm wire run. They
+are retained only as a historical reference and are **not** results for the
+current symmetric 4 nm boundary configuration. Run notebook 01 and read
+the sigma-tagged table for current values.
 
 At zero wire offset:
 
@@ -503,7 +534,7 @@ At zero wire offset:
 | PCI left fraction | 0.50633690 |
 | Total exit / incident | 0.72707427 |
 
-Across the full 41-offset scan:
+Across that earlier 41-offset scan:
 
 | Quantity | Minimum | Maximum |
 |---|---:|---:|
@@ -512,8 +543,8 @@ Across the full 41-offset scan:
 
 ## Outputs
 
-- Figure: `SAXS_asymmetry/outputs/realistic_profile/figures/01_realistic_pci_saxs_left_right.png`
-- PCI table: `SAXS_asymmetry/outputs/realistic_profile/tables/realistic_profile_pci_exit_left_right.dat`
+- Figure: `SAXS_asymmetry/outputs/sigmaL_4nm_sigmaR_4nm/realistic_profile/figures/02_realistic_pci_saxs_left_right.png`
+- PCI table: `SAXS_asymmetry/outputs/sigmaL_4nm_sigmaR_4nm/realistic_profile/tables/realistic_profile_pci_exit_left_right.dat`
 
 The PCI table columns are:
 
