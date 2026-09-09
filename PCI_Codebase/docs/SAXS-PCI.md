@@ -120,16 +120,18 @@ variation of the sample and gives the usual scattering amplitude after
 propagation. This expansion shows why the scattering and refraction pictures
 agree in the thin-target, weak-scattering limit.
 
-## 3. Fresnel-Huygens propagation
+## 3. Rayleigh–Sommerfeld propagation and the Fresnel approximation
 
-Let $E(x',y',0)$ be the exit field at the sample plane and $E(X,Y,Z)$ the
-field a distance $Z$ downstream. The scalar Fresnel-Huygens integral is
+For time dependence $e^{-i\omega t}$, a known exit field $E(x',y',0)$ over
+the whole sample plane gives the outgoing field in a homogeneous scalar
+half-space $Z>0$ through the exact Rayleigh–Sommerfeld I integral:
 
 $$
 E(X,Y,Z)
 = \frac{1}{i\lambda}
-  \iint E(x',y',0)\,
-  \frac{e^{ikR}}{R}\frac{Z}{R}\,
+  \iint_{\mathbb R^2} E(x',y',0)\,
+  \frac{e^{ikR}}{R}\frac{Z}{R}
+  \left(1+\frac{i}{kR}\right)\,
   \mathrm dx'\,\mathrm dy',
 $$
 
@@ -139,8 +141,11 @@ $$
 R=\sqrt{(X-x')^2+(Y-y')^2+Z^2}.
 $$
 
-The factor $Z/R$ is the direction cosine between the propagation direction
-and the line joining a source point to an observation point.
+The factor $Z/R$ is the propagation direction cosine. This real-space
+integral is equivalent to angular spectrum propagation; see the
+[derivation and references](propagators.md#rayleighsommerfeld-real-space-foundation).
+For $kR\gg1$, the correction $i/(kR)$ can be neglected, leaving the familiar
+$Ze^{ikR}/(i\lambda R^2)$ kernel. The Fresnel approximation follows below.
 
 ### Paraxial approximation
 

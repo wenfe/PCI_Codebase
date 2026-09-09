@@ -6,6 +6,101 @@ they encode, and how they map onto the source code. All quantities use the
 module unit system: **length in nanometers** (`nm = 1`) and **energy in keV**
 (convenience constants `m`, `um`, `mm`, `cm`, `eV` are provided).
 
+## Rayleigh–Sommerfeld: real-space foundation
+
+**Rayleigh–Sommerfeld propagation is the real-space form of the same scalar
+free-space propagation described by angular spectrum in Fourier space.**
+Let $E_0(x',y')$ be the known field over the plane $z=0$. With time dependence
+$e^{-i\omega t}$, wavelength $\lambda$, and $k=2\pi/\lambda$, the outgoing
+solution in the homogeneous, source-free half-space $z>0$ is
+
+$$
+\boxed{
+E(X,Y,z)=\iint_{\mathbb R^2}E_0(x',y')\,
+h_{\mathrm{RS}}(X-x',Y-y';z)\,\mathrm dx'\,\mathrm dy'
+= (E_0*h_{\mathrm{RS}})(X,Y)
+}
+$$
+
+where $R=\sqrt{(X-x')^2+(Y-y')^2+z^2}$ and the exact Rayleigh–Sommerfeld I
+kernel is
+
+$$
+\begin{aligned}
+h_{\mathrm{RS}}
+&=-\frac{1}{2\pi}\frac{\partial}{\partial z}
+  \left(\frac{e^{ikR}}{R}\right)\\
+&=\frac{z\,e^{ikR}}{2\pi R^3}(1-ikR)
+=\frac{1}{i\lambda}\frac{z}{R}\frac{e^{ikR}}{R}
+  \left(1+\frac{i}{kR}\right).
+\end{aligned}
+$$
+
+This derivative form follows the scalar diffraction formulation in
+[Cubillos and Jimenez, section 2](https://arxiv.org/pdf/2111.06951).
+Each input position contributes a complex amplitude at the observation point;
+these amplitudes interfere before intensity is calculated as $I=|E|^2$.
+The factor $z/R$ is the obliquity factor. For $kR\gg1$, dropping $i/(kR)$ gives
+the commonly used spherical-wave kernel $z e^{ikR}/(i\lambda R^2)$; that
+simplification is distinct from the paraxial approximation.
+
+### Equivalent Fourier-space form
+
+Use the transverse Fourier convention
+$\mathcal F[f](k_x,k_y)=\iint f(x,y)e^{-i(k_xx+k_yy)}\,\mathrm dx\,\mathrm dy$,
+with inverse normalization $1/(2\pi)^2$. Then
+
+$$
+\mathcal F[h_{\mathrm{RS}}](k_x,k_y)=e^{ik_z z},
+\qquad
+k_z=
+\begin{cases}
+\sqrt{k^2-k_x^2-k_y^2}, & k_x^2+k_y^2\le k^2,\\
+i\sqrt{k_x^2+k_y^2-k^2}, & k_x^2+k_y^2>k^2.
+\end{cases}
+$$
+
+Consequently, the convolution theorem gives
+
+$$
+\underbrace{E_0*h_{\mathrm{RS}}}_{\text{Rayleigh–Sommerfeld: real space}}
+=\underbrace{\mathcal F^{-1}\!\left[\mathcal F[E_0]e^{ik_z z}\right]}
+_{\text{angular spectrum: Fourier space}}.
+$$
+
+Both forms are exact within this scalar boundary-value problem, including
+evanescent decay, and apply in the near and far field. Their equivalence is
+explained in [TU Delft's diffraction chapter](https://interactivetextbooks.tudelft.nl/interactive-optics/content/Chap6_Diffraction/DiffractiveOptics_2022_01Clean.html#rayleigh-sommerfeld-diffraction-integral).
+
+### From Rayleigh–Sommerfeld to Fresnel and Fraunhofer
+
+Writing $\rho^2=(X-x')^2+(Y-y')^2$, the paraxial expansion
+$R\simeq z+\rho^2/(2z)$, together with $z/R^2\simeq1/z$ and $kR\gg1$, gives
+
+$$
+h_{\mathrm F}(\rho;z)=\frac{e^{ikz}}{i\lambda z}
+\exp\!\left(\frac{ik\rho^2}{2z}\right).
+$$
+
+The neglected phase must be small over the contributing region:
+$k\rho^4/(8z^3)\ll1$. Fraunhofer makes the further approximation of neglecting
+the input quadratic phase when $k(x'^2+y'^2)/(2z)\ll1$ over the illuminated
+support. This is the approximation hierarchy described in
+[TU Delft's Fresnel and Fraunhofer derivation](https://interactivetextbooks.tudelft.nl/interactive-optics/content/Chap6_Diffraction/DiffractiveOptics_2022_01Clean.html#fresnel-and-fraunhofer-approximations).
+
+| Description | Representation | Approximation |
+| --- | --- | --- |
+| Rayleigh–Sommerfeld I | Real-space convolution | Exact scalar half-space solution |
+| Angular spectrum | Fourier-space multiplication | Equivalent exact scalar solution |
+| Fresnel | Quadratic-phase integral; can use an FFT | Paraxial |
+| Fraunhofer | Fourier transform of the input field with detector scaling | Further far-field limit of Fresnel |
+
+In `PCI.py`, `spectral_propagate_to_position()` evaluates the angular-spectrum
+form; there is no separate direct Rayleigh–Sommerfeld integrator. Continuum
+equivalence does not guarantee identical sampled results: a real-space sum
+requires area weights and adequate kernel sampling, while FFT propagation
+requires adequate sampling and window size to control periodic wraparound.
+
 ---
 
 ## 1. Conventions and base quantities
@@ -110,7 +205,7 @@ operations (`scipy.ndimage.rotate` / `shift`).
 
 ---
 
-## 3. Angular Spectrum propagator (near field, exact)
+## 3. Angular Spectrum propagator (exact; used for PCI)
 
 Implemented in `spectral_propagate_to_position()`. Used for **PCI** and for the
 target-to-target hops. This is the exact solution of the Helmholtz equation in
@@ -180,7 +275,7 @@ spacing never changes, so successive hops compose cleanly.
 
 ---
 
-## 4. Fresnel single-FFT propagator (far field, magnifying)
+## 4. Fresnel single-FFT propagator (paraxial, magnifying)
 
 Implemented in `lorentz_propagate_to_position()`. Used for **SAXS** (detector
 far from the last target). This is the paraxial (Fresnel) approximation
@@ -227,7 +322,8 @@ The rescaled grid is stored as `_propagated_x` / `_propagated_y` /
 pixel size; `Z == 0` returns the input unchanged on the unchanged grid.
 
 ### Properties
-- **Paraxial** (small-angle) approximation — valid only in the far field.
+- **Paraxial** (small-angle) approximation — valid in the Fresnel regime and
+  its far-field limit when the neglected phase is small.
 - **Pixel size changes** with $z$ — magnifying coordinate system.
 - Efficient single FFT for large detector distances.
 
@@ -254,6 +350,7 @@ after (output curvature).
 
 | Regime | Propagator | Method | Pixel size | Code |
 | --- | --- | --- | --- | --- |
+| General scalar free space | Rayleigh–Sommerfeld I | $E_0*h_{\mathrm{RS}}$ | chosen observation grid | Real-space foundation; no separate integrator |
 | Near field / PCI | Angular Spectrum | $\mathcal{F}^{-1}[\mathcal{F}E_0\,e^{ik_z z}]$ | preserved | `spectral_propagate_to_position` |
 | Far field / SAXS | Fresnel single-FFT | chirp · FFT · chirp | rescaled | `lorentz_propagate_to_position` |
 
@@ -402,6 +499,7 @@ sequenceDiagram
 | Target phase | $\Delta\phi = \sum_i k\,\delta_i\, t_i$ | `Target.get_phase_shift` |
 | Target amplitude | $T = e^{-\frac12\sum_i \mu_i t_i}$ | `Target.get_absorption` |
 | Wire projection | $t(s) = 2\sqrt{R^2 - s^2}$ | `wire._get_projection` |
+| Rayleigh–Sommerfeld I | $E = E_0*h_{\mathrm{RS}}$ | Equivalent continuum formulation of `spectral_propagate_to_position`; no direct integrator |
 | Angular spectrum | $E = \mathcal{F}^{-1}[\mathcal{F}E_0\, e^{ik_z z}]$ | `spectral_propagate_to_position` |
 | Fresnel single-FFT | $E = \frac{e^{ikz}}{i\lambda z} e^{i\frac{k}{2z}R^2}\,\Delta x^2\,\mathcal{F}[E_0 e^{i\frac{k}{2z}r^2}]$ | `lorentz_propagate_to_position` |
 | Gaussian beam | $w(z),\ 1/R(z)=\frac{z}{z^2+z_R^2},\ z_R=\pi w_0^2/\lambda$, Gouy $\arctan(z/z_R)$ | `gaussian_XFEL.initialize_to_position` |
