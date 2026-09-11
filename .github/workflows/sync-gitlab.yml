@@ -19,24 +19,16 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: Check out GitHub main
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: main
-          fetch-depth: 0
-          persist-credentials: false
-          # Sync needs Git objects, not a full working tree. Avoid materializing
-          # legacy gitlinks that have no matching .gitmodules configuration.
-          sparse-checkout: .github
-
-      - name: Push main to GitLab
+      - name: Fetch GitHub main and push to GitLab
         shell: bash
         env:
+          GITHUB_TOKEN: ${{ github.token }}
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
           GITLAB_REPO_URL: ${{ vars.GITLAB_REPO_URL }}
           GIT_TERMINAL_PROMPT: "0"
         run: |
           set -euo pipefail
+          : "${GITHUB_TOKEN:?GitHub Actions must provide GITHUB_TOKEN}"
           : "${GITLAB_TOKEN:?Set the GITLAB_TOKEN secret}"
           : "${GITLAB_REPO_URL:?Set the GITLAB_REPO_URL variable}"
 
@@ -53,12 +45,27 @@ jobs:
           cat > "$GIT_ASKPASS" <<'EOF'
           #!/usr/bin/env bash
           case "$1" in
-            *Username*) printf '%s\n' 'oauth2' ;;
-            *Password*) printf '%s\n' "$GITLAB_TOKEN" ;;
+            *Username*) printf '%s\n' "$SYNC_USERNAME" ;;
+            *Password*) printf '%s\n' "$SYNC_PASSWORD" ;;
             *) exit 1 ;;
           esac
           EOF
           chmod 700 "$GIT_ASKPASS"
 
+          # A bare repository fetches all objects without checking out files or
+          # inspecting legacy gitlinks that lack .gitmodules configuration.
+          repository_dir="$RUNNER_TEMP/gitlab-sync.git"
+          git init --bare "$repository_dir"
+
+          export SYNC_USERNAME='x-access-token'
+          export SYNC_PASSWORD="$GITHUB_TOKEN"
+          git --git-dir="$repository_dir" -c credential.helper= fetch \
+            --no-tags --no-recurse-submodules -- \
+            "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git" \
+            refs/heads/main:refs/heads/main
+
+          export SYNC_USERNAME='oauth2'
+          export SYNC_PASSWORD="$GITLAB_TOKEN"
           # Fast-forward only: preserve any commits made directly on GitLab.
-          git -c credential.helper= push -- "$GITLAB_REPO_URL" HEAD:refs/heads/main
+          git --git-dir="$repository_dir" -c credential.helper= push -- \
+            "$GITLAB_REPO_URL" refs/heads/main:refs/heads/main
