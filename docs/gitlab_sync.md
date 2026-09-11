@@ -40,8 +40,11 @@ is independent of this setting.
 ## Sync behavior
 
 - Sync is one way, from GitHub to GitLab, and updates only `main`.
-- The job checks out the latest GitHub `main` with full history. Runs are
-  serialized so a running push is not interrupted by a newer run.
+- The job fetches the latest GitHub `main` with full history. Only `.github`
+  and root files are materialized on the runner; all committed files are still
+  included in the push. This avoids checkout errors from legacy submodule
+  entries without `.gitmodules` URLs. Runs are serialized so a running push is
+  not interrupted by a newer run.
 - GitHub access is read-only. The GitLab token is supplied through a temporary
   Git credential prompt helper, which is deleted when the step exits.
 - Pushes are fast-forward only. The workflow does not force-push, delete

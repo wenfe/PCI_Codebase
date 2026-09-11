@@ -25,6 +25,9 @@ jobs:
           ref: main
           fetch-depth: 0
           persist-credentials: false
+          # Sync needs Git objects, not a full working tree. Avoid materializing
+          # legacy gitlinks that have no matching .gitmodules configuration.
+          sparse-checkout: .github
 
       - name: Push main to GitLab
         shell: bash
