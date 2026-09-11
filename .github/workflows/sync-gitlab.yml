@@ -1,0 +1,61 @@
+name: Sync main to GitLab
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-main-to-gitlab
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out GitHub main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Push main to GitLab
+        shell: bash
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          GITLAB_REPO_URL: ${{ vars.GITLAB_REPO_URL }}
+          GIT_TERMINAL_PROMPT: "0"
+        run: |
+          set -euo pipefail
+          : "${GITLAB_TOKEN:?Set the GITLAB_TOKEN secret}"
+          : "${GITLAB_REPO_URL:?Set the GITLAB_REPO_URL variable}"
+
+          # Accept an HTTPS clone URL without credentials, queries, or fragments.
+          if [[ ! "$GITLAB_REPO_URL" =~ ^https://[a-zA-Z0-9.-]+(:[0-9]+)?(/[a-zA-Z0-9_.-]+)+\.git$ ]]; then
+            echo "::error::GITLAB_REPO_URL must be a credential-free HTTPS clone URL ending in .git"
+            exit 1
+          fi
+
+          export GIT_ASKPASS
+          GIT_ASKPASS="$(mktemp)"
+          trap 'rm -f "$GIT_ASKPASS"' EXIT
+
+          cat > "$GIT_ASKPASS" <<'EOF'
+          #!/usr/bin/env bash
+          case "$1" in
+            *Username*) printf '%s\n' 'oauth2' ;;
+            *Password*) printf '%s\n' "$GITLAB_TOKEN" ;;
+            *) exit 1 ;;
+          esac
+          EOF
+          chmod 700 "$GIT_ASKPASS"
+
+          # Fast-forward only: preserve any commits made directly on GitLab.
+          git -c credential.helper= push -- "$GITLAB_REPO_URL" HEAD:refs/heads/main
