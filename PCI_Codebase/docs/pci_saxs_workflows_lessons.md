@@ -29,7 +29,7 @@ The source creates a complex incident field. The copper wire multiplies it by an
 - Detector-center correction is analysis geometry, not a new physical beam. A +0.005 nm⁻¹ q shift moves the excluded window and changes the centered left fraction from about 0.5 to about 0.542.
 - `PCI.py` is the usable reference engine. `PCI_torch.py` is a promising experimental port for batched/GPU work, but it is not presently importable or parity-validated in this workspace.
 - Comparison quality is controlled as much by axis, mask, row averaging, orientation, and normalization as by the propagation model itself.
-- The standalone symmetric-sigma sweep compares 0, 3, 3.8, 4, 6, 8, and 14 nm for 6.0, 7.0, and 7.11 µm beams on a 0.48 µm offset grid without changing the production notebooks. It reports the propagated Mark1300 fraction and overlays Erik's measured motor scan.
+- The standalone symmetric-sigma sweep compares 0, 3, 3.8, 4, 6, 8, and 14 nm for the 7.11 µm beam on a 0.48 µm offset grid without changing the production notebooks. It reports the propagated Mark1300 fraction, overlays Erik's measured motor scan, and shows both wire-edge thickness zooms.
 
 ### Recommended reading order
 
@@ -221,12 +221,19 @@ sensitivity runner for
 sigma_left = sigma_right = 0, 3, 3.8, 4, 6, 8, or 14 nm.
 ```
 
-It produces the Mark1300 observable for the 6.0, 7.0, and 7.11 µm divergent
-beams. Each case uses 43 offsets from −10.0 through +10.16 µm at 0.48 µm spacing:
+It produces the Mark1300 observable for the 7.11 µm divergent beam.
+The sweep uses 43 offsets from −10.0 through +10.16 µm at 0.48 µm spacing:
 
 | Observable | Fast-path method | Main finding |
 |---|---|---|
-| Divergent Mark1300 fraction | Separable 1-D complex field and 4096-point Fresnel FFT with the +0.005 nm⁻¹ shifted q mask; overlay Erik's measured motor offsets and left fractions | Sigma strongly changes the offset response; the maximum change from sigma 8 nm is about 0.213 for sigma 0 nm, 0.196 for sigma 3 nm, 0.155 for sigma 3.8 nm, and 0.120 for sigma 14 nm. The motor points provide an experimental reference on all three FWHM panels. |
+| Divergent Mark1300 fraction | Separable 1-D complex field and 4096-point Fresnel FFT with the +0.005 nm⁻¹ shifted q mask; overlay Erik's measured motor offsets and left fractions | Sigma strongly changes the offset response; the maximum change from sigma 8 nm is about 0.213 for sigma 0 nm, 0.196 for sigma 3 nm, 0.155 for sigma 3.8 nm, and 0.120 for sigma 14 nm. The motor points provide an experimental reference on the 7.11 µm panel. |
+
+The fraction plot is saved separately from two standalone 8 × 6 inch wire-edge
+thickness figures: the left edge (−5.04 to −4.99 µm) uses the `_wire_left_edge`
+filename suffix, and the right edge (4.99 to 5.04 µm) uses `_wire_right_edge`.
+Both figures use matching rainbow colors and legend labels for every sigma.
+Current tables and summaries cover the 7.11 µm case;
+earlier 6.0 and 7.0 µm table files may remain in the output directory.
 
 ![Quick symmetric-sigma Mark1300 sweep](../SAXS_asymmetry/outputs/quick_symmetric_sigma/mark1300_symmetric_sigma.png)
 
@@ -532,7 +539,7 @@ The active comparison reuses divergent 7.11 µm SAXS TIFFs and calculates distin
 |---|---|
 | `SAXS_asymmetry/01_calculate_and_save_data.ipynb` | Active calculation and artifact pipeline. |
 | `SAXS_asymmetry/02_plot_and_save_figures.ipynb` | Active read-only plotting pipeline. |
-| `SAXS_asymmetry/quick_symmetric_sigma_check.py` | Standalone 0/3/3.8/4/6/8/14 nm symmetric-sigma Mark1300 sensitivity runner for 6.0/7.0/7.11 µm with 0.48 µm offset spacing and Erik motor-scan overlay. |
+| `SAXS_asymmetry/quick_symmetric_sigma_check.py` | Standalone 0/3/3.8/4/6/8/14 nm symmetric-sigma Mark1300 sensitivity runner for 7.11 µm with 0.48 µm offset spacing, Erik motor-scan overlay, and both wire-edge thickness zooms. |
 | `SAXS_asymmetry/PCI.py` | Reference NumPy/SciPy wave-propagation implementation. |
 | `SAXS_asymmetry/PCI_torch.py` | Experimental PyTorch port. |
 | `docs/SAXS-PCI.md` | Unified physical interpretation. |

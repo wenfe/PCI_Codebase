@@ -24,6 +24,7 @@ import numpy as np
 
 SAXS_DIR = Path(__file__).resolve().parent
 NOTEBOOK = SAXS_DIR / "01_calculate_and_save_data.ipynb"
+FIGURE_WIDTH, FIGURE_HEIGHT = 160, 95
 if str(SAXS_DIR) not in sys.path:
     sys.path.insert(0, str(SAXS_DIR))
 from wire_offset_scene import (
@@ -141,7 +142,9 @@ def draw_profile(data, index, left, bottom, width, height, palette):
     if index == 0:
         for y in [0, 0.5, 1]:
             text(f"{y:.1f}", (left-0.8, py(y)-0.32, 0.8), 0.95, palette["muted"], align="RIGHT")
-        text("Iin / I0", (left-0.5, py(1.16), 0.8), 0.95, palette["muted"])
+        label = text("Normalized intensity [a.u.]", (left-4, py(0.54), 0.8),
+                     1.05, palette["ink"], align="CENTER")
+        label.rotation_euler.z = math.pi/2
     line("FWHM dimension", [(px(-fwhm/2), py(0.5), 0.7), (px(fwhm/2), py(0.5), 0.7)], palette["blue"], 0.04)
     for x in [-fwhm/2, fwhm/2]:
         line("FWHM tick", [(px(x), py(0.47), 0.7), (px(x), py(0.53), 0.7)], palette["blue"], 0.04)
@@ -150,35 +153,32 @@ def draw_profile(data, index, left, bottom, width, height, palette):
 
 
 def draw_figure(config, data, interaction_paths, setup_path, resolution):
-    scene = new_scene("00 | Gaussian wire offsets - complete figure", resolution, round(resolution*0.75), 16)
+    """Manuscript layout: setup (a), followed by offset examples (b)--(d)."""
+    scene = new_scene("00 | Gaussian wire offsets - complete figure", resolution,
+                      round(resolution*FIGURE_HEIGHT/FIGURE_WIDTH), 16)
     scene.cycles.use_denoising = False
-    camera(scene, (80, 60, 200), (80, 60, 0), 160)
+    camera(scene, (80, FIGURE_HEIGHT/2, 200), (80, FIGURE_HEIGHT/2, 0), FIGURE_WIDTH)
     palette = {name: material("Figure " + name, color, flat=True) for name, color in {
         "ink": INK, "muted": MUTED, "blue": BLUE, "beam": BEAM, "copper": COPPER, "rule": RULE,
         "pale_blue": "#e8f0f8", "pale_copper": "#f5e9df", "overlap": "#dedddc",
     }.items()}
-    text("Gaussian XFEL illumination of a Cu wire", (9, 112.5, 1), 3.05, palette["ink"], bold=True)
-    text(f"Wire diameter {2*float(data['wire_radius_um']):g} µm   /   Target-plane intensity FWHM "
-         f"{float(data['fwhm_um']):g} µm   /   Photon energy {config['PHOTON_ENERGY']:g} keV",
-         (9, 108, 1), 1.3, palette["muted"])
-    text("EXPERIMENTAL GEOMETRY", (9, 103.5, 1), 1.05, palette["muted"], bold=True)
-    image_plane("Blender-rendered experimental geometry", setup_path, (80, 83, 0), 144, 144*0.27)
-    line("Section rule", [(9, 63, 1), (151, 63, 1)], palette["rule"], 0.035)
+    image_plane("Blender-rendered experimental geometry", setup_path, (80, 75, 0), 144, 144*0.27)
+    text("(a)", (9, 91, 1), 1.8, palette["ink"], bold=True)
+    line("Section rule", [(9, 55, 1), (151, 55, 1)], palette["rule"], 0.035)
     for index, (offset, path, left) in enumerate(zip(data["offsets_um"], interaction_paths, [9, 58, 107])):
         sign = f"{offset:+g}" if offset else "0"
-        text(f"({chr(97+index)})  Δx = {sign} µm", (left, 59.5, 1), 1.8, palette["ink"], bold=True)
-        text("3D Gaussian beam and cylindrical wire", (left, 56.8, 1), 1.02, palette["muted"])
-        image_plane(f"Blender-rendered offset {offset:g} um", path, (left+21.75, 40.5, 0), 43.5, 43.5*0.68)
-        text(f"{2*float(data['wire_radius_um']):g} µm Cu wire", (left+27, 54.6, 1), 1.08,
-             palette["copper"], align="CENTER")
-        text("Gaussian XFEL", (left+1, 28, 1), 1.1, palette["beam"])
-        text("Incident Gaussian", (left, 24.8, 1), 1.02, palette["blue"], bold=True)
-        text("Cu wire silhouette", (left+24, 24.8, 1), 1.02, palette["copper"])
-        draw_profile(data, index, left, 12, 43.5, 10, palette)
-    text("Δx = wire centre − beam axis. Gold: incident XFEL. Red: reflected SAXS.",
-         (9, 5, 1), 1.0, palette["muted"])
-    text("Huang et al., Matter Radiat. Extremes 11, 017201 (2026), doi:10.1063/5.0279974. "
-         "Beamline distances/angles are schematic; optical pump/RXES omitted.", (9, 2.7, 1), 0.88, palette["muted"])
+        text(f"({chr(98+index)})  Δx = {sign} µm", (left, 51.5, 1), 1.8, palette["ink"], bold=True)
+        image_plane(f"Blender-rendered offset {offset:g} um", path, (left+21.75, 32.5, 0), 43.5, 43.5*0.68)
+        if index == 0:
+            text(f"{2*float(data['wire_radius_um']):g} µm Cu wire", (left+27, 46.6, 1), 1.08,
+                 palette["copper"], align="CENTER")
+            text("Gaussian XFEL", (left+1, 43, 1), 1.1, palette["beam"])
+        if index == 1:
+            text("Incident Gaussian", (left, 16.8, 1), 1.02, palette["blue"], bold=True)
+            text("Cu wire silhouette", (left+24, 16.8, 1), 1.02, palette["copper"])
+        draw_profile(data, index, left, 4, 43.5, 10, palette)
+    scene["panel_layout"] = "(a) experimental setup; (b)-(d) transverse offsets with normalized incident Gaussian profiles"
+    scene["figure_canvas"] = [FIGURE_WIDTH, FIGURE_HEIGHT]
     scene["editing"] = "Scenes 01–03 contain editable interactions; scene 04 contains the beamline. Re-run the script to refresh this presentation."
     return scene
 
@@ -250,6 +250,11 @@ def main():
         notebook_numeric_settings=config, offsets_um=args.offsets, target_intensity_fwhm_um=fwhm,
         coordinate_mapping="Blender X = beam z; Blender Y = transverse x; Blender Z = wire y; one unit = one µm in interaction scenes",
         offset_definition="wire centre minus beam axis along the transverse coordinate",
+        panel_layout="(a) experimental setup; (b)-(d) illustrative offsets, with profile plots below",
+        incident_beam_direction="Editable Blender arrow along physical +z (Blender +X), before the Cu wire in panel (a)",
+        reflected_beam_direction="Editable red arrow along the reflected SAXS branch toward Jungfrau in panel (a)",
+        offset_annotations="Offset values appear only in panel headings; lower dimension marks and duplicate labels are omitted",
+        coordinate_axes="Panels (b)-(d): x transverse to beam and wire, y along wire, z along beam; shared origin at beam exit",
         incident_intensity="I(r)/I0 = exp(-4 ln(2) r^2/FWHM^2)",
         beam_style=BEAM_STYLE,
         apparatus_style=APPARATUS_STYLE,
@@ -263,7 +268,7 @@ def main():
         reflected_beams="Exactly one red 3D Gaussian-style reflected SAXS branch beginning on the upper HAPG surface and reaching the Jungfrau panel. Its width and path are illustrative, not separate physical ray traces from each mirror.",
         mirrors="Two original green Highly Annealed Pyrolytic Graphite plates restored, including their locations, dimensions and parallel 15-degree tilts. Apparatus dimensions, distances and angles are schematic.",
         scene_names=[scene.name for scene in bpy.data.scenes], samples=args.samples,
-        combined_resolution=[args.resolution, round(args.resolution*0.75)], outputs=[str(path) for path in paths],
+        combined_resolution=[args.resolution, round(args.resolution*FIGURE_HEIGHT/FIGURE_WIDTH)], outputs=[str(path) for path in paths],
     )
     (output/f"{args.output_stem}_metadata.json").write_text(json.dumps(metadata, indent=2)+"\n", encoding="utf-8")
     print("Created native Blender scenes and renders:", flush=True)

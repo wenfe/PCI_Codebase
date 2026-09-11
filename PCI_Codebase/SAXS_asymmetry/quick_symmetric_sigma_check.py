@@ -7,10 +7,14 @@ Run from the repository root with::
 
     python SAXS_asymmetry/quick_symmetric_sigma_check.py
 
-By default it compares sigma = 0, 3, 3.8, 4, 6, 8, and 14 nm for the 6.0,
-7.0, and 7.11 um beam cases with a +0.005 nm^-1 Mark1300 q-mask shift. Each
-case uses 0.48 um wire-offset spacing from -10.0 through +10.16 um. Results are written to
+By default it compares sigma = 0, 3, 4, 6, 8, and 14 nm for the
+7.11 um beam case with a +0.005 nm^-1 Mark1300 q-mask shift. The scan uses
+0.48 um wire-offset spacing from -10.0 through +10.16 um. Results are written to
 ``SAXS_asymmetry/outputs/quick_symmetric_sigma``.
+Fraction plots and wire-thickness plots are saved as separate figures with
+consistent rainbow sigma colors. Separate 8-by-6-inch wire-thickness figures
+zoom onto the left and right edges and use the filename suffixes
+``_wire_left_edge`` and ``_wire_right_edge``.
 """
 
 from __future__ import annotations
@@ -50,8 +54,6 @@ OFFSET_MAX_UM = 10.16
 DEFAULT_OUTPUT_DIR = SAXS_DIR / "outputs" / "quick_symmetric_sigma"
 ERIK_DIR = SAXS_DIR / "inputs" / "experimental" / "Erik"
 MARK1300_BEAM_CASES = {
-    "6p0um": 6.0,
-    "7p0um": 7.0,
     "7p11um": 7.11,
 }
 
@@ -378,26 +380,37 @@ def save_comparison_plot(
     fraction_label: str,
     motor_offsets_um: np.ndarray | None = None,
     motor_left_fraction: np.ndarray | None = None,
-) -> None:
+) -> list[Path]:
     import matplotlib.pyplot as plt
-
-    figure, axes = plt.subplots(
-        1,
-        len(results),
-        figsize=(5.2 * len(results), 4.8),
-        sharex=True,
-        sharey=True,
+    # Keep nearby sigma cases distinct, with the same colors in all figures.
+    colors = plt.get_cmap("rainbow")(np.linspace(0.0, 1.0, len(sigmas_nm)))
+    sigma_colors = dict(zip(sigmas_nm, colors))
+    sigma_labels = {
+        sigma_nm: rf"$\sigma_L=\sigma_R={sigma_nm:g}$ nm"
+        for sigma_nm in sigmas_nm
+    }
+    wire_axis_um = (
+        (np.arange(WIRE_VOXEL_NUMBER) - WIRE_VOXEL_NUMBER // 2)
+        * WIRE_VOXEL_SIZE_NM / PCI.um
     )
-    axes = np.atleast_1d(axes)
+    unblurred_chord_nm = voxelized_chord_profile()
+    thickness_profiles_um = {
+        sigma_nm: symmetric_blur(unblurred_chord_nm, sigma_nm) / PCI.um
+        for sigma_nm in sigmas_nm
+    }
+    output_paths: list[Path] = []
     for column, result in enumerate(results.values()):
-        fraction_axis = axes[column]
+        figure, fraction_axis = plt.subplots(
+            figsize=(10.8, 4.8), layout="constrained"
+        )
         offsets_um = np.asarray(result["offsets_um"])
         fraction_by_sigma = result["fraction_by_sigma"]
         for sigma_nm in sigmas_nm:
             fraction_axis.plot(
                 offsets_um,
                 fraction_by_sigma[sigma_nm],
-                label=rf"$\sigma_L=\sigma_R={sigma_nm:g}$ nm",
+                color=sigma_colors[sigma_nm],
+                label=sigma_labels[sigma_nm],
             )
         if motor_offsets_um is not None and motor_left_fraction is not None:
             fraction_axis.plot(
@@ -411,17 +424,59 @@ def save_comparison_plot(
                 zorder=5,
             )
         fraction_axis.axhline(0.5, color="0.5", linewidth=0.8, linestyle="--")
-        fraction_axis.set_title(
-            f"Beam FWHM {float(result['beam_fwhm_um']):g} µm"
+        # fraction_axis.set_title(
+        #     f"Beam FWHM {float(result['beam_fwhm_um']):g} µm"
+        # )
+        fraction_axis.set(
+            xlabel="Wire offset (µm)",
+            ylabel=fraction_label,
         )
-        fraction_axis.set_xlabel("Wire offset (µm)")
         fraction_axis.grid(alpha=0.25)
-    axes[0].set_ylabel(fraction_label)
-    axes[-1].legend(frameon=False, fontsize=9)
-    figure.suptitle(title)
-    figure.tight_layout()
-    figure.savefig(path, dpi=180, bbox_inches="tight")
-    plt.close(figure)
+        fraction_axis.legend(frameon=False, fontsize=9)
+
+        figure.suptitle(title)
+        output_path = path if len(results) == 1 else path.with_name(
+            f"{path.stem}_{column}{path.suffix}"
+        )
+        figure.savefig(output_path, dpi=180, bbox_inches="tight")
+        plt.close(figure)
+        output_paths.append(output_path)
+
+    # Wire-edge profiles depend on sigma, not on the beam case.
+    for edge_name, edge_slug, edge_limits_um in (
+        ("Left edge", "left", (-5.04, -4.99)),
+        ("Right edge", "right", (4.99, 5.04)),
+    ):
+        thickness_figure = plt.figure(figsize=(8, 6), layout="constrained")
+        thickness_axis = thickness_figure.gca()
+        for sigma_nm in sigmas_nm:
+            thickness_axis.plot(
+                wire_axis_um,
+                thickness_profiles_um[sigma_nm],
+                color=sigma_colors[sigma_nm],
+                linewidth=2,
+                label=sigma_labels[sigma_nm],
+            )
+        thickness_axis.set(
+            xlabel="Distance across wire [µm]",
+            title=f"{edge_name} wire-edge blur",
+            xlim=edge_limits_um,
+            ylim=(0.0, 0.2),
+        )
+        thickness_axis.grid(alpha=0.25)
+        thickness_axis.set_ylabel("Wire thickness [µm]")
+        thickness_axis.legend(
+            loc="upper left" if edge_slug == "left" else "upper right",
+            fontsize=8,
+        )
+        thickness_figure.suptitle(title)
+        thickness_path = path.with_name(
+            f"{path.stem}_wire_{edge_slug}_edge{path.suffix}"
+        )
+        thickness_figure.savefig(thickness_path, dpi=180, bbox_inches="tight")
+        plt.close(thickness_figure)
+        output_paths.append(thickness_path)
+    return output_paths
 
 
 def parse_args() -> argparse.Namespace:
@@ -430,8 +485,8 @@ def parse_args() -> argparse.Namespace:
         "--sigmas",
         nargs="+",
         type=float,
-        default=[0.0, 3.0, 3.8, 4.0, 6.0, 8.0, 14.0],
-        help="Symmetric sigma values in nm (default: 0 3 3.8 4 6 8 14).",
+        default=[0.0, 3.0, 4.0, 6.0, 8.0, 14.0],
+        help="Symmetric sigma values in nm (default: 0 3 4 6 8 14).",
     )
     parser.add_argument(
         "--q-mask-shift-nm-inv",
@@ -443,12 +498,12 @@ def parse_args() -> argparse.Namespace:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Destination for tables and the comparison figure.",
+        help="Destination for tables and separate fraction and wire-edge figures.",
     )
     parser.add_argument(
         "--no-plot",
         action="store_true",
-        help="Write tables without creating the PNG comparison.",
+        help="Write tables without creating the PNG figures.",
     )
     return parser.parse_args()
 
@@ -521,19 +576,19 @@ def main() -> int:
     if not args.no_plot:
         erik = load_erik_motor_reference()
         mark1300_figure_path = output_dir / "mark1300_symmetric_sigma.png"
-        save_comparison_plot(
+        figure_paths = save_comparison_plot(
             mark1300_figure_path,
             mark1300_results,
             sigmas_nm,
             title=(
-                "Divergent Mark1300 sensitivity to symmetric edge sigma\n"
-                rf"q-mask shift = {q_mask_shift_nm_inv:+g} nm$^{{-1}}$"
+                ""
             ),
-            fraction_label="Mark1300 left fraction  L / (L + R)",
+            fraction_label=r"$f_L$",
             motor_offsets_um=erik["motor_offsets_um"],
             motor_left_fraction=erik["motor_left_fraction"],
         )
-        print(f"Saved {mark1300_figure_path}")
+        for figure_path in figure_paths:
+            print(f"Saved {figure_path}")
 
     print(
         "Completed symmetric-sigma sweep with q-mask shift "

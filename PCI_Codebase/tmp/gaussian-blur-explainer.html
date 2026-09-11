@@ -1,0 +1,98 @@
+<div id="gaussian-blur-explainer">
+  <style>
+    #gaussian-blur-explainer { color: var(--foreground); }
+    #gaussian-blur-explainer .kernel-details { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 12px 0; }
+    #gaussian-blur-explainer .kernel-diagram { display: block; width: 100%; overflow: visible; }
+    #gaussian-blur-explainer .kernel-diagram text { fill: var(--foreground); font-size: 12px; }
+    #gaussian-blur-explainer .kernel-diagram .rail { stroke: var(--border); stroke-width: 1; }
+    #gaussian-blur-explainer .kernel-diagram .sample { fill: var(--viz-series-1); }
+    #gaussian-blur-explainer .kernel-diagram .sample-zero { fill: var(--muted); }
+    #gaussian-blur-explainer .kernel-diagram .sigma-span { fill: var(--viz-series-1); opacity: .14; }
+    #gaussian-blur-explainer .kernel-value { font-weight: 500; }
+  </style>
+  <div class="viz-controls">
+    <label class="form-label" for="gaussian-sigma-nm">Nominal σ: <output id="gaussian-sigma-display" class="tabular-nums" for="gaussian-sigma-nm">4 nm · 0.50 pixels</output>
+      <input class="form-range" id="gaussian-sigma-nm" type="range" min="0" max="16" step="0.25" value="4">
+    </label>
+  </div>
+  <div class="text-small">Sample spacing: 8 nm · truncate: 3</div>
+  <div class="kernel-details text-small tabular-nums" aria-live="polite">
+    <span>Kernel radius: <span id="gaussian-radius" class="kernel-value">2 pixels</span></span>
+    <span>Discrete RMS width: <span id="gaussian-effective" class="kernel-value">3.71 nm</span></span>
+  </div>
+  <svg class="kernel-diagram" role="img" aria-labelledby="gaussian-kernel-title gaussian-kernel-description">
+    <title id="gaussian-kernel-title">Gaussian sample weights</title>
+    <desc id="gaussian-kernel-description">Normalized discrete Gaussian weights at offsets from minus six to plus six pixels. Circle area represents weight. The shaded span shows plus or minus the nominal sigma.</desc>
+    <g id="gaussian-kernel-marks"></g>
+  </svg>
+  <div id="gaussian-central-weights" class="text-small tabular-nums" aria-live="polite"></div>
+  <script>
+  (() => {
+    const root = document.getElementById('gaussian-blur-explainer');
+    const slider = root.querySelector('#gaussian-sigma-nm');
+    const sigmaDisplay = root.querySelector('#gaussian-sigma-display');
+    const radiusDisplay = root.querySelector('#gaussian-radius');
+    const effectiveDisplay = root.querySelector('#gaussian-effective');
+    const centralDisplay = root.querySelector('#gaussian-central-weights');
+    const svg = root.querySelector('.kernel-diagram');
+    const marks = root.querySelector('#gaussian-kernel-marks');
+    const description = root.querySelector('#gaussian-kernel-description');
+    const namespace = 'http://www.w3.org/2000/svg';
+    function kernel(sigmaNm) {
+      const sigma = sigmaNm / 8;
+      const radius = Math.floor(3 * sigma + 0.5);
+      const raw = Array.from({length: 13}, (_, index) => {
+        const offset = index - 6;
+        return Math.abs(offset) > radius ? 0 : sigma === 0 ? (offset === 0 ? 1 : 0) : Math.exp(-0.5 * (offset / sigma) ** 2);
+      });
+      const sum = raw.reduce((total, value) => total + value, 0);
+      const weights = raw.map(value => value / sum);
+      const rms = Math.sqrt(weights.reduce((total, weight, index) => total + weight * (index - 6) ** 2, 0));
+      return {sigma, radius, weights, rms};
+    }
+    function element(name, attributes, text) {
+      const node = document.createElementNS(namespace, name);
+      for (const [key, value] of Object.entries(attributes)) node.setAttribute(key, String(value));
+      if (text !== undefined) node.textContent = text;
+      marks.appendChild(node);
+      return node;
+    }
+    function render() {
+      const sigmaNm = Number(slider.value);
+      const result = kernel(sigmaNm);
+      const width = Math.max(280, root.getBoundingClientRect().width);
+      const pad = 18;
+      const spacing = (width - 2 * pad) / 12;
+      const center = width / 2;
+      const maxRadius = Math.min(31, spacing * 0.48);
+      const percent = value => (100 * value).toFixed(2) + '%';
+      sigmaDisplay.textContent = sigmaNm.toFixed(2).replace(/\.00$/, '') + ' nm · ' + result.sigma.toFixed(3).replace(/0$/, '') + ' pixels';
+      radiusDisplay.textContent = result.radius + ' pixels (' + (2 * result.radius + 1) + ' samples)';
+      effectiveDisplay.textContent = (result.rms * 8).toFixed(3) + ' nm · ' + result.rms.toFixed(3) + ' pixels';
+      centralDisplay.textContent = 'Center: ' + percent(result.weights[6]) + ' · Each nearest neighbor: ' + percent(result.weights[5]);
+      description.textContent = 'Normalized sample weights; circle area represents weight. Nominal sigma ' + sigmaNm + ' nanometers; discrete RMS width ' + (result.rms * 8).toFixed(3) + ' nanometers. ' + result.weights.map((weight, index) => 'Offset ' + (index - 6) + ' pixels: ' + percent(weight)).join('; ');
+      svg.setAttribute('viewBox', '0 0 ' + width + ' 176');
+      svg.setAttribute('height', '176');
+      marks.replaceChildren();
+      element('text', {x: 0, y: 17}, 'Normalized sample weights');
+      element('rect', {x: center - result.sigma * spacing, y: 36, width: 2 * result.sigma * spacing, height: 84, class: 'sigma-span'});
+      element('line', {x1: pad, x2: width - pad, y1: 80, y2: 80, class: 'rail'});
+      result.weights.forEach((weight, index) => {
+        const offset = index - 6;
+        const x = pad + index * spacing;
+        element('line', {x1: x, x2: x, y1: 76, y2: 84, class: 'rail'});
+        const circle = element('circle', {cx: x, cy: 80, r: maxRadius * Math.sqrt(weight), class: 'sample'});
+        const title = document.createElementNS(namespace, 'title');
+        title.textContent = 'Offset ' + offset + ' pixels (' + offset * 8 + ' nm): ' + percent(weight);
+        circle.appendChild(title);
+        element('text', {x, y: 138, 'text-anchor': 'middle'}, offset > 0 ? '+' + offset : offset);
+      });
+      element('text', {x: center, y: 32, 'text-anchor': 'middle'}, '±σ');
+      element('text', {x: center, y: 166, 'text-anchor': 'middle'}, 'Sample offset (pixels)');
+    }
+    slider.addEventListener('input', render);
+    new ResizeObserver(render).observe(root);
+    render();
+  })();
+  </script>
+</div>

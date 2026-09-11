@@ -25,16 +25,50 @@ blender --background --factory-startup --python-exit-code 1 --python SAXS_asymme
 
 The default output folder is
 `SAXS_asymmetry/outputs/sigmaL_4nm_sigmaR_4nm/schematics/blender/` (the sigma folder
-follows the notebook settings). It contains the complete 3200 × 2400 PNG figure,
+follows the notebook settings). It contains the complete 3200 × 1900 PNG figure,
 three separate interaction PNGs, an experimental geometry PNG, a `.blend` file,
 numeric `.npz` data and a metadata JSON. Use `-OutputDir` to change the folder.
 These Blender outputs use a separate basename and folder from older PDF/SVG
-exports; no new PDF or SVG is generated.
+exports. The figure follows the supplied manuscript schematic: the apparatus
+is panel **(a)**, and the three wire offsets and normalized Gaussian profiles
+are panels **(b)-(d)**. The figure has no presentation title or footer. Numeric
+configuration and image attribution are recorded in the companion metadata.
+
+The incoming XFEL beam in panel (a) includes an editable arrow and the label
+**Beam direction (+z)**. This is built by `draw_setup_3d()` in
+`wire_offset_scene.py` along Blender +X (physical +z), before the wire. It is
+part of the native scene and is regenerated with the figure.
+The reflected SAXS branch also includes a red arrow pointing from the HAPG
+mirror toward the Jungfrau detector. Panels (b)-(d) show their offset values
+only in the headings, without duplicate offset labels or dimension guides
+below the cylinders. The Gaussian XFEL label in panel (b) sits above the
+incoming beam.
+Each of panels (b)-(d) has an xyz coordinate triad at the beam exit: **x**
+is the transverse wire-offset direction, **y** is parallel to the wire, and
+**z** is the beam propagation direction. All arrows share one origin and
+follow the actual scene coordinates; their labels face the camera.
+
+To reproduce the updated figure without replacing older outputs:
+
+```powershell
+.\SAXS_asymmetry\run_gaussian_wire_offsets_blender.ps1 -Resolution 3200 -Samples 48 -OutputStem schematics_from_code
+```
+
+For an Overleaf-ready PDF, run the companion exporter using a Python
+environment with `reportlab` installed:
+
+```powershell
+python .\SAXS_asymmetry\export_schematic_pdf.py .\SAXS_asymmetry\outputs\sigmaL_4nm_sigmaR_4nm\schematics\blender\schematics_from_code.png
+```
+
+The PDF preserves the full rendered PNG at a width of 180 mm (about 452 dpi
+for the 3200-pixel render). The `.blend` retains editable geometry, arrows,
+labels and profile curves; the PDF embeds the rendered image.
 
 Open the `.blend` in Blender. The scene selector at the top right contains:
 
 - **00**: complete figure with editable labels and profile curves, plus the 3D renders.
-- **01–03**: the actual copper cylinders, Gaussian volume shaders and golden contour surfaces, dimensions,
+- **01–03**: the actual copper cylinders, Gaussian volume shaders, golden contour surfaces and coordinate axes,
   lights and orthographic cameras for each wire offset.
 - **04**: the two green SAXS HAPG plates and both Jungfrau/XPCI image panels
   from Huang et al., Fig. 2, with a gold 3D primary beam and exactly one red 3D

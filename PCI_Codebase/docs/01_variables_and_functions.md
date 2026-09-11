@@ -695,7 +695,7 @@ runner. It compares symmetric boundary models
 sigma_left_nm = sigma_right_nm = 0, 3, 3.8, 4, 6, 8, or 14 nm
 ```
 
-for the 6.0 µm, 7.0 µm, and 7.11 µm divergent Gaussian cases. Every case uses
+for the 7.11 µm divergent Gaussian case. The sweep uses
 43 offsets from −10.0 through +10.16 µm at 0.48 µm spacing. It does not edit the
 notebooks or write into a sigma-tagged production tree. All artifacts go to
 `SAXS_asymmetry/outputs/quick_symmetric_sigma/`.
@@ -727,10 +727,10 @@ Optional CLI arguments are `--sigmas <values...>`,
 | `MARK1300_Q_MIN_NM_INV` | `float` | 0.10 nm^-1 |
 | `Q_MASK_SHIFT_NM_INV` | `float` | Default shifted-mask centre, +0.005 nm^-1 |
 | `OFFSET_MIN_UM` / `OFFSET_MAX_UM` | `float` | −10.0 / +10.16 µm |
-| `OFFSET_STEP_UM` | `float` | 0.48 µm for every quick-check beam case |
+| `OFFSET_STEP_UM` | `float` | 0.48 µm for the quick-check sweep |
 | `DEFAULT_OUTPUT_DIR` | `Path` | `outputs/quick_symmetric_sigma` |
 | `ERIK_DIR` | `Path` | Directory containing the motor positions and measured left fractions |
-| `MARK1300_BEAM_CASES` | `dict[str, float]` | Divergent SAXS cases: 6.0, 7.0, and 7.11 µm |
+| `MARK1300_BEAM_CASES` | `dict[str, float]` | Divergent SAXS case: 7.11 µm |
 
 ## Functions
 
@@ -747,7 +747,7 @@ Optional CLI arguments are `--sigmas <values...>`,
 | `save_scan_table(...)` | `None` | Save every offset and sigma curve as a whitespace table |
 | `save_selected_offset_summary(...)` | `None` | Save fractions nearest requested −2, 0, and +2 µm, including both requested and sampled offsets |
 | `save_sigma_effect_summary(...)` | `None` | Save the maximum absolute change from the 8 nm reference curve |
-| `save_comparison_plot(...)` | `None` | Plot the three absolute-fraction panels with the Erik motor overlay; no difference row |
+| `save_comparison_plot(...)` | `list[Path]` | Save the separate 7.11 µm absolute-fraction plot with the Erik motor overlay and two standalone 8 × 6 inch wire-edge thickness figures, using `_wire_left_edge` and `_wire_right_edge` filename suffixes and consistent rainbow sigma colors |
 | `parse_args()` | `argparse.Namespace` | Parse CLI overrides |
 | `main()` | `int` | Run the Mark1300 sweep, validation, tables, and figure |
 
@@ -763,12 +763,14 @@ both side sums and cancels in `L/(L+R)`.
 
 | Artifact | Contents |
 |---|---|
-| `mark1300_left_fraction_6p0um.dat` | Full divergent 6.0 µm Mark1300 sweep |
-| `mark1300_left_fraction_7p0um.dat` | Full divergent 7.0 µm Mark1300 sweep |
 | `mark1300_left_fraction_7p11um.dat` | Full divergent 7.11 µm Mark1300 sweep |
-| `mark1300_selected_offsets.csv` | Mark1300 fractions nearest requested −2, 0, and +2 µm; sampled positions are −1.84, +0.08, and +2.00 µm |
-| `mark1300_sigma_effect_summary.csv` | Maximum Mark1300 change relative to sigma 8 nm |
-| `mark1300_symmetric_sigma.png` | Three Mark1300 absolute-fraction panels with Erik motor points; no lower axes |
+| `mark1300_selected_offsets.csv` | 7.11 µm Mark1300 fractions nearest requested −2, 0, and +2 µm; sampled positions are −1.84, +0.08, and +2.00 µm |
+| `mark1300_sigma_effect_summary.csv` | Maximum 7.11 µm Mark1300 change relative to sigma 8 nm |
+| `mark1300_symmetric_sigma.png` | One 7.11 µm Mark1300 absolute-fraction panel with Erik motor points; lower left-edge (−5.04 to −4.99 µm) and right-edge (4.99 to 5.04 µm) thickness zooms with matching rainbow colors and legend labels for all seven sigmas |
+
+Earlier `mark1300_left_fraction_6p0um.dat` and
+`mark1300_left_fraction_7p0um.dat` files may remain in the output directory;
+the current sweep regenerates the 7.11 µm table, summaries, and figure.
 
 The current validation errors against the saved full 2-D asymmetric 4/8 nm
 shifted-mask results are `2.02e-7` for 6.0 µm and `1.98e-7` for 7.11 µm.

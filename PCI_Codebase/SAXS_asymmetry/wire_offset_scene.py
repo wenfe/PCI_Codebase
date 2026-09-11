@@ -282,21 +282,22 @@ def draw_interaction_3d(data, index, width=1200, samples=32):
     studio(scene)
     copper = material("Satin copper", "#cf8d55", metal=0.4, roughness=0.42)
     beam_ink = material("Beam annotations", BEAM, flat=True)
-    ink = material("Offset dimension", INK, flat=True)
-    subtle = material("Centre guides", "#aebbc7", flat=True)
     wire = cylinder(f"Cu wire | diameter {2*radius:g} um", radius, 26, (0, offset, 0), copper)
     wire["radius_um"], wire["offset_um"] = radius, offset
     gaussian_volume("Incident XFEL | golden Gaussian beam", fwhm)
+    # Physical coordinates: x is transverse (Blender Y), y follows the wire
+    # (Blender Z), and z follows the beam (Blender X). Use a shared origin
+    # just beyond the beam exit to keep the triad clear of the wire.
+    axis_origin = (18.4, 0, 0)
+    arrow("Transverse axis x", axis_origin, (18.4, 6.5, 0), beam_ink)
+    text("x", (18.4, 7.1, 0), 1.4, beam_ink, facing=cam)
+    arrow("Wire axis y", axis_origin, (18.4, 0, 6.5), beam_ink)
+    text("y", (18.4, 0, 7.1), 1.4, beam_ink, facing=cam)
     arrow("Beam propagation z", (18.4, 0, 0), (23.5, 0, 0), beam_ink)
     text("z", (24, 0, 0), 1.4, beam_ink, facing=cam)
-    floor = -16
-    for transverse in [0, offset] if offset else [0]:
-        line("Offset endpoint tick", [(-0.65, transverse, floor), (0.65, transverse, floor)], ink)
-    if offset:
-        line("Signed transverse displacement", [(0, 0, floor), (0, offset, floor)], ink, 0.065)
-        for z in [-13.5, -14.4, -15.3]:
-            line("Wire centre drop line", [(0, offset, z), (0, offset, z-0.35)], subtle, 0.025)
-    text(f"Δx = {offset:+g} µm" if offset else "Δx = 0", (3, offset/2, -16.7), 1.35, ink, facing=cam)
+    scene["coordinate_axes"] = "Shared-origin xyz triad at beam exit: x transverse, y along wire, z along beam"
+    # Offset values are shown once in the panel headings. Keep the region
+    # below the cylinders free of duplicate labels and dimension guides.
     return scene
 
 
@@ -393,6 +394,12 @@ def draw_setup_3d(config, width=2800, samples=32):
     # Retain the paper's horizontal primary beam and panel layout.
     # The beam ends just before the XPCI reference panel's left edge.
     gaussian_volume("Schematic primary XFEL", 1.4, length=122.6, center=(-3.7, 0, 0), density=0.3)
+    # The physical +z direction maps to Blender +X. Keep the annotation on
+    # the camera-facing side of the incoming beam so the volume cannot hide it.
+    arrow("Incident beam direction (+z)", (-64, -2, 0), (-41, -2, 0),
+          beam_ink, radius=0.085, head=1.1)
+    text("Beam direction (+z)", (-52.5, -2, -3.4), 1.25, beam_ink,
+         align="CENTER", facing=cam)
     detector = saxs_detector(cam)
     mirrors = [hapg_crystal(index, center, palette) for index, center in
                enumerate([(-6, 0, -2.8), (13.6, 0, 4.05)], start=1)]
@@ -405,6 +412,11 @@ def draw_setup_3d(config, width=2800, samples=32):
     reflected = beam_segment("Reflected SAXS | single branch", start, end, 1.2)
     reflected["description"] = "One combined SAXS branch touching the upper HAPG surface and reaching the Jungfrau panel; illustrative beam width and path."
     reflected["reference_panel_anchor"] = list(panel_anchor)
+    # A camera-facing arrow follows the reflected branch toward Jungfrau.
+    # Its small depth offset keeps the annotation clear of the beam volume.
+    arrow_front = cam.rotation_euler.to_quaternion() @ Vector((0, 0, 2.2))
+    arrow("Reflected SAXS direction", start.lerp(end, 0.12) + arrow_front,
+          start.lerp(end, 0.88) + arrow_front, red_ink, radius=0.10, head=1.1)
     pci_detector(cam)
     for label, location, size, mat, align in [
         (f"Gaussian XFEL  /  {config['PHOTON_ENERGY']:g} keV", (-68, 0, 3.2), 1.65, beam_ink, "LEFT"),
@@ -424,6 +436,8 @@ def draw_setup_3d(config, width=2800, samples=32):
          align="CENTER", facing=cam)
     scene["interpretation"] = "Fig. 2 HAPG plates, Jungfrau and XPCI image panels with 3D beams. One red branch represents collected SAXS; both detector images are published references, not new simulations."
     scene["apparatus_style"] = APPARATUS_STYLE
+    scene["incident_beam_direction"] = "Physical +z (Blender +X), left to right toward the Cu wire"
+    scene["reflected_beam_direction"] = "Red arrow along the reflected SAXS branch from the HAPG mirror toward Jungfrau"
     fit_apparatus_camera(scene)
     return scene
 

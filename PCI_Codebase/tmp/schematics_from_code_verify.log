@@ -1,0 +1,222 @@
+Blender 4.5.13 LTS (hash daeeeca98fb0 built 2026-08-25 01:50:50)
+Read blend: "C:\Users\feng48\Downloads\PCI_Codebase\PCI_Codebase\SAXS_asymmetry\outputs\sigmaL_4nm_sigmaR_4nm\schematics\blender\schematics_from_code.blend"
+Fra:1 Mem:80.18M (Peak 80.18M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Blender-rendered experimental geometry
+Fra:1 Mem:80.18M (Peak 80.18M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | (a)
+Fra:1 Mem:80.24M (Peak 80.24M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Section rule
+Fra:1 Mem:80.24M (Peak 80.24M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | (b)  Δx = -5 µm
+Fra:1 Mem:80.34M (Peak 80.34M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | 10 µm Cu wire.001
+Fra:1 Mem:80.45M (Peak 80.45M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Blender-rendered offset -5 um
+Fra:1 Mem:80.48M (Peak 80.48M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Gaussian XFEL
+Fra:1 Mem:80.70M (Peak 80.70M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Cu wire silhouette
+Fra:1 Mem:80.70M (Peak 80.70M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Incident Gaussian intensity
+Fra:1 Mem:81.84M (Peak 81.84M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide
+Fra:1 Mem:81.84M (Peak 81.84M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.001
+Fra:1 Mem:81.84M (Peak 81.84M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.002
+Fra:1 Mem:81.85M (Peak 81.85M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.003
+Fra:1 Mem:81.85M (Peak 81.85M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.004
+Fra:1 Mem:81.85M (Peak 81.85M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.005
+Fra:1 Mem:81.85M (Peak 81.85M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.006
+Fra:1 Mem:81.85M (Peak 81.85M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.007
+Fra:1 Mem:81.86M (Peak 81.86M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.008
+Fra:1 Mem:81.86M (Peak 81.86M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.009
+Fra:1 Mem:81.86M (Peak 81.86M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.010
+Fra:1 Mem:81.86M (Peak 81.86M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.011
+Fra:1 Mem:81.87M (Peak 81.87M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.012
+Fra:1 Mem:81.87M (Peak 81.87M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.013
+Fra:1 Mem:81.87M (Peak 81.87M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.014
+Fra:1 Mem:81.87M (Peak 81.87M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.015
+Fra:1 Mem:81.87M (Peak 81.87M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.016
+Fra:1 Mem:81.88M (Peak 81.88M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.017
+Fra:1 Mem:81.88M (Peak 81.88M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.018
+Fra:1 Mem:81.88M (Peak 81.88M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.019
+Fra:1 Mem:81.88M (Peak 81.88M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.020
+Fra:1 Mem:81.88M (Peak 81.88M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.021
+Fra:1 Mem:81.89M (Peak 81.89M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.022
+Fra:1 Mem:81.89M (Peak 81.89M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.023
+Fra:1 Mem:81.89M (Peak 81.89M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.024
+Fra:1 Mem:81.89M (Peak 81.89M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.025
+Fra:1 Mem:81.89M (Peak 81.89M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.026
+Fra:1 Mem:81.90M (Peak 81.90M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.027
+Fra:1 Mem:81.90M (Peak 81.90M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.028
+Fra:1 Mem:81.90M (Peak 81.90M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.029
+Fra:1 Mem:81.90M (Peak 81.90M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.030
+Fra:1 Mem:81.91M (Peak 81.91M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.031
+Fra:1 Mem:81.91M (Peak 81.91M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | x axis
+Fra:1 Mem:81.91M (Peak 81.91M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Intensity axis
+Fra:1 Mem:81.91M (Peak 81.91M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | x tick
+Fra:1 Mem:81.91M (Peak 81.91M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | -10
+Fra:1 Mem:81.94M (Peak 81.94M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | x tick.001
+Fra:1 Mem:81.95M (Peak 81.95M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | -5
+Fra:1 Mem:81.96M (Peak 81.96M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | x tick.002
+Fra:1 Mem:81.97M (Peak 81.97M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | 0
+Fra:1 Mem:81.99M (Peak 81.99M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | x tick.003
+Fra:1 Mem:81.99M (Peak 81.99M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | 5
+Fra:1 Mem:82.01M (Peak 82.01M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | x tick.004
+Fra:1 Mem:82.01M (Peak 82.01M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | 10
+Fra:1 Mem:82.04M (Peak 82.04M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | 0.0
+Fra:1 Mem:82.09M (Peak 82.09M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | 0.5
+Fra:1 Mem:82.14M (Peak 82.14M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | 1.0
+Fra:1 Mem:82.17M (Peak 82.17M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Normalized intensity [a.u.]
+Fra:1 Mem:82.48M (Peak 82.48M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | FWHM dimension
+Fra:1 Mem:82.48M (Peak 82.48M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | FWHM tick
+Fra:1 Mem:82.48M (Peak 82.48M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | FWHM tick.001
+Fra:1 Mem:82.49M (Peak 82.49M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | FWHM 7.11 µm
+Fra:1 Mem:82.55M (Peak 82.55M) | Time:00:00.01 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Transverse position, x (µm)
+Fra:1 Mem:82.93M (Peak 82.93M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | (c)  Δx = 0 µm
+Fra:1 Mem:83.04M (Peak 83.04M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Blender-rendered offset 0 um
+Fra:1 Mem:83.04M (Peak 83.04M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Incident Gaussian
+Fra:1 Mem:83.31M (Peak 83.31M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Cu wire silhouette.001
+Fra:1 Mem:83.53M (Peak 83.53M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Cu wire silhouette.002
+Fra:1 Mem:83.53M (Peak 83.53M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Incident Gaussian intensity.001
+Fra:1 Mem:83.72M (Peak 83.72M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Incident Gaussian fill.005
+Fra:1 Mem:84.68M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.032
+Fra:1 Mem:84.68M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.033
+Fra:1 Mem:84.68M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.034
+Fra:1 Mem:84.68M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.035
+Fra:1 Mem:84.68M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.036
+Fra:1 Mem:84.69M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.037
+Fra:1 Mem:84.69M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.038
+Fra:1 Mem:84.69M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.039
+Fra:1 Mem:84.69M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.040
+Fra:1 Mem:84.70M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.041
+Fra:1 Mem:84.70M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.042
+Fra:1 Mem:84.70M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.043
+Fra:1 Mem:84.70M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.044
+Fra:1 Mem:84.70M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.045
+Fra:1 Mem:84.71M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.046
+Fra:1 Mem:84.71M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.047
+Fra:1 Mem:84.71M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.048
+Fra:1 Mem:84.71M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.049
+Fra:1 Mem:84.71M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.050
+Fra:1 Mem:84.72M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.051
+Fra:1 Mem:84.72M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.052
+Fra:1 Mem:84.72M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.053
+Fra:1 Mem:84.72M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.054
+Fra:1 Mem:84.73M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.055
+Fra:1 Mem:84.73M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.056
+Fra:1 Mem:84.73M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.057
+Fra:1 Mem:84.73M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.058
+Fra:1 Mem:84.73M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.059
+Fra:1 Mem:84.74M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.060
+Fra:1 Mem:84.74M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.061
+Fra:1 Mem:84.74M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.062
+Fra:1 Mem:84.74M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.063
+Fra:1 Mem:84.74M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | x axis.001
+Fra:1 Mem:84.75M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Intensity axis.001
+Fra:1 Mem:84.75M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | x tick.005
+Fra:1 Mem:84.75M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | -10.001
+Fra:1 Mem:84.78M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | x tick.006
+Fra:1 Mem:84.78M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | -5.001
+Fra:1 Mem:84.80M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | x tick.007
+Fra:1 Mem:84.80M (Peak 84.80M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | 0.001
+Fra:1 Mem:84.83M (Peak 84.83M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | x tick.008
+Fra:1 Mem:84.83M (Peak 84.83M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | 5.001
+Fra:1 Mem:84.85M (Peak 84.85M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | x tick.009
+Fra:1 Mem:84.85M (Peak 84.85M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | 10.001
+Fra:1 Mem:84.88M (Peak 84.88M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | FWHM dimension.001
+Fra:1 Mem:84.88M (Peak 84.88M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | FWHM tick.002
+Fra:1 Mem:84.88M (Peak 84.88M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | FWHM tick.003
+Fra:1 Mem:84.89M (Peak 84.89M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | FWHM 7.11 µm.001
+Fra:1 Mem:84.95M (Peak 84.95M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Transverse position, x (µm).001
+Fra:1 Mem:85.33M (Peak 85.33M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | (d)  Δx = +5 µm
+Fra:1 Mem:85.43M (Peak 85.43M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Cu wire silhouette.003
+Fra:1 Mem:85.43M (Peak 85.43M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Blender-rendered offset 5 um
+Fra:1 Mem:85.43M (Peak 85.43M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Incident Gaussian fill.006
+Fra:1 Mem:85.43M (Peak 85.43M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Incident Gaussian intensity.002
+Fra:1 Mem:85.45M (Peak 85.45M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Incident Gaussian fill.008
+Fra:1 Mem:86.58M (Peak 86.58M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.064
+Fra:1 Mem:86.58M (Peak 86.58M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.065
+Fra:1 Mem:86.58M (Peak 86.58M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.066
+Fra:1 Mem:86.58M (Peak 86.58M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.067
+Fra:1 Mem:86.58M (Peak 86.58M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.068
+Fra:1 Mem:86.59M (Peak 86.59M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.069
+Fra:1 Mem:86.59M (Peak 86.59M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.070
+Fra:1 Mem:86.59M (Peak 86.59M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.071
+Fra:1 Mem:86.59M (Peak 86.59M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.072
+Fra:1 Mem:86.59M (Peak 86.59M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.073
+Fra:1 Mem:86.60M (Peak 86.60M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.074
+Fra:1 Mem:86.60M (Peak 86.60M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.075
+Fra:1 Mem:86.60M (Peak 86.60M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.076
+Fra:1 Mem:86.60M (Peak 86.60M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.077
+Fra:1 Mem:86.61M (Peak 86.61M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.078
+Fra:1 Mem:86.61M (Peak 86.61M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.079
+Fra:1 Mem:86.61M (Peak 86.61M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.080
+Fra:1 Mem:86.61M (Peak 86.61M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.081
+Fra:1 Mem:86.61M (Peak 86.61M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.082
+Fra:1 Mem:86.62M (Peak 86.62M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.083
+Fra:1 Mem:86.62M (Peak 86.62M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.084
+Fra:1 Mem:86.62M (Peak 86.62M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.085
+Fra:1 Mem:86.62M (Peak 86.62M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.086
+Fra:1 Mem:86.62M (Peak 86.62M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.087
+Fra:1 Mem:86.63M (Peak 86.63M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.088
+Fra:1 Mem:86.63M (Peak 86.63M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.089
+Fra:1 Mem:86.63M (Peak 86.63M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.090
+Fra:1 Mem:86.63M (Peak 86.63M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.091
+Fra:1 Mem:86.64M (Peak 86.64M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.092
+Fra:1 Mem:86.64M (Peak 86.64M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.093
+Fra:1 Mem:86.64M (Peak 86.64M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.094
+Fra:1 Mem:86.64M (Peak 86.64M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Wire edge guide.095
+Fra:1 Mem:86.64M (Peak 86.64M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | x axis.002
+Fra:1 Mem:86.65M (Peak 86.65M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Intensity axis.002
+Fra:1 Mem:86.65M (Peak 86.65M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | x tick.010
+Fra:1 Mem:86.65M (Peak 86.65M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | -10.002
+Fra:1 Mem:86.68M (Peak 86.68M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | x tick.011
+Fra:1 Mem:86.68M (Peak 86.68M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | -5.002
+Fra:1 Mem:86.70M (Peak 86.70M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | x tick.012
+Fra:1 Mem:86.70M (Peak 86.70M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | 0.002
+Fra:1 Mem:86.73M (Peak 86.73M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | x tick.013
+Fra:1 Mem:86.73M (Peak 86.73M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | 5.002
+Fra:1 Mem:86.75M (Peak 86.75M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | x tick.014
+Fra:1 Mem:86.75M (Peak 86.75M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | 10.002
+Fra:1 Mem:86.78M (Peak 86.78M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | FWHM dimension.002
+Fra:1 Mem:86.78M (Peak 86.78M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | FWHM tick.004
+Fra:1 Mem:86.78M (Peak 86.78M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | FWHM tick.005
+Fra:1 Mem:86.79M (Peak 86.79M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | FWHM 7.11 µm.002
+Fra:1 Mem:86.85M (Peak 86.85M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Synchronizing object | Transverse position, x (µm).002
+Fra:1 Mem:87.23M (Peak 87.23M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Initializing
+Fra:1 Mem:72.46M (Peak 87.23M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Images | Loading schematics_from_code_offset_p5um.png
+Fra:1 Mem:72.46M (Peak 87.23M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Images | Loading schematics_from_code_offset_p0um.png
+Fra:1 Mem:90.57M (Peak 95.07M) | Time:00:00.03 | Mem:22.61M, Peak:22.61M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Waiting for render to start
+Fra:1 Mem:90.57M (Peak 95.07M) | Time:00:00.03 | Mem:22.61M, Peak:22.61M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Scene
+Fra:1 Mem:90.57M (Peak 95.07M) | Time:00:00.03 | Mem:22.61M, Peak:22.61M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Shaders
+Fra:1 Mem:90.57M (Peak 95.07M) | Time:00:00.03 | Mem:22.61M, Peak:22.61M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Loading render kernels (may take a few minutes the first time)
+Fra:1 Mem:90.65M (Peak 95.07M) | Time:00:00.03 | Mem:22.61M, Peak:22.61M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Procedurals
+Fra:1 Mem:90.65M (Peak 95.07M) | Time:00:00.03 | Mem:22.61M, Peak:22.61M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Background
+Fra:1 Mem:90.65M (Peak 95.07M) | Time:00:00.03 | Mem:22.61M, Peak:22.61M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Camera
+Fra:1 Mem:90.65M (Peak 95.07M) | Time:00:00.03 | Mem:22.61M, Peak:22.61M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Meshes Flags
+Fra:1 Mem:90.65M (Peak 95.07M) | Time:00:00.03 | Mem:22.61M, Peak:22.61M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Objects
+Fra:1 Mem:90.65M (Peak 95.07M) | Time:00:00.03 | Mem:22.61M, Peak:22.61M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Objects | Copying Transformations to device
+Fra:1 Mem:90.69M (Peak 95.07M) | Time:00:00.03 | Mem:22.65M, Peak:22.65M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Particle Systems
+Fra:1 Mem:90.69M (Peak 95.07M) | Time:00:00.03 | Mem:22.65M, Peak:22.65M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Particle Systems | Copying Particles to device
+Fra:1 Mem:90.70M (Peak 95.07M) | Time:00:00.03 | Mem:22.65M, Peak:22.65M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Meshes
+Fra:1 Mem:90.70M (Peak 95.07M) | Time:00:00.03 | Mem:22.65M, Peak:22.65M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Objects | Applying Static Transformations
+Fra:1 Mem:90.70M (Peak 95.07M) | Time:00:00.03 | Mem:22.65M, Peak:22.65M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Mesh | Computing attributes
+Fra:1 Mem:90.72M (Peak 95.07M) | Time:00:00.03 | Mem:22.65M, Peak:22.65M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Mesh | Copying Attributes to device
+Fra:1 Mem:90.70M (Peak 95.07M) | Time:00:00.03 | Mem:22.66M, Peak:22.66M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Scene BVH | Building
+Fra:1 Mem:90.70M (Peak 95.07M) | Time:00:00.03 | Mem:22.66M, Peak:22.66M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Scene BVH | Building BVH
+Fra:1 Mem:90.70M (Peak 95.07M) | Time:00:00.03 | Mem:25.28M, Peak:25.28M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Scene BVH | Building BVH 0%
+Fra:1 Mem:90.70M (Peak 95.07M) | Time:00:00.04 | Mem:28.40M, Peak:31.02M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Scene BVH | Copying BVH to device
+Fra:1 Mem:90.70M (Peak 95.07M) | Time:00:00.04 | Mem:28.40M, Peak:31.02M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Mesh | Computing normals
+Fra:1 Mem:93.44M (Peak 95.07M) | Time:00:00.04 | Mem:28.40M, Peak:31.02M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Mesh | Copying Mesh to device
+Fra:1 Mem:93.44M (Peak 95.07M) | Time:00:00.04 | Mem:31.14M, Peak:31.14M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Objects Flags
+Fra:1 Mem:93.44M (Peak 95.07M) | Time:00:00.04 | Mem:31.14M, Peak:31.14M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Primitive Offsets
+Fra:1 Mem:93.44M (Peak 95.07M) | Time:00:00.04 | Mem:31.14M, Peak:31.14M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Images
+Fra:1 Mem:93.44M (Peak 95.07M) | Time:00:00.04 | Mem:31.14M, Peak:31.14M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Camera Volume
+Fra:1 Mem:93.44M (Peak 95.07M) | Time:00:00.04 | Mem:31.14M, Peak:31.14M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Lookup Tables
+Fra:1 Mem:93.44M (Peak 95.07M) | Time:00:00.04 | Mem:31.22M, Peak:31.22M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Lights
+Fra:1 Mem:93.44M (Peak 95.07M) | Time:00:00.04 | Mem:31.22M, Peak:31.22M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Lights | Computing tree
+Fra:1 Mem:104.16M (Peak 111.17M) | Time:00:00.08 | Mem:41.94M, Peak:41.94M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Integrator
+Fra:1 Mem:104.16M (Peak 111.17M) | Time:00:00.08 | Mem:41.94M, Peak:41.94M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Film
+Fra:1 Mem:104.16M (Peak 111.17M) | Time:00:00.08 | Mem:41.86M, Peak:41.94M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Lookup Tables
+Fra:1 Mem:104.16M (Peak 111.17M) | Time:00:00.08 | Mem:41.94M, Peak:41.94M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Baking
+Fra:1 Mem:104.16M (Peak 111.17M) | Time:00:00.08 | Mem:41.94M, Peak:41.94M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Updating Device | Writing constant memory
+Fra:1 Mem:104.16M (Peak 111.17M) | Time:00:00.08 | Mem:41.94M, Peak:41.94M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Sample 0/16
+Fra:1 Mem:156.54M (Peak 156.54M) | Time:00:00.12 | Remaining:00:00.61 | Mem:94.14M, Peak:94.14M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Sample 1/16
+Fra:1 Mem:179.73M (Peak 226.12M) | Time:00:00.68 | Mem:94.14M, Peak:94.14M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Sample 16/16
+Fra:1 Mem:179.73M (Peak 226.12M) | Time:00:00.68 | Mem:94.14M, Peak:94.14M | 00 | Gaussian wire offsets - complete figure, ViewLayer | Finished
+Saved: 'C:\Users\feng48\Downloads\PCI_Codebase\PCI_Codebase\tmp\blender-apparatus-final-review.jpg'
+Time: 00:00.72 (Saving: 00:00.02)
+
+{"status": "PASS", "scenes": 5, "packed_images": 6, "wire_diameter_um": 10.0, "fwhm_um": 7.11, "offsets_um": [-5, 0, 5], "checks": "reopened scene geometry, Gaussian profile, packed assets, text framing, Fig. 2 HAPG plates and both detector panels, exactly one red 3D SAXS branch, horizontal gold beam to XPCI"}
+
+Blender quit
