@@ -1,0 +1,54 @@
+name: Sync main to GitLab
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-main-to-gitlab
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out GitHub main
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Push main to GitLab
+        shell: bash
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          GITLAB_REPO_URL: ${{ vars.GITLAB_REPO_URL }}
+          GIT_TERMINAL_PROMPT: "0"
+        run: |
+          set -euo pipefail
+          : "${GITLAB_TOKEN:?Set the GITLAB_TOKEN secret}"
+          : "${GITLAB_REPO_URL:?Set the GITLAB_REPO_URL variable}"
+
+          export GIT_ASKPASS
+          GIT_ASKPASS="$(mktemp)"
+          trap 'rm -f "$GIT_ASKPASS"' EXIT
+
+          cat > "$GIT_ASKPASS" <<'EOF'
+          #!/usr/bin/env bash
+          case "$1" in
+            *Username*) printf '%s\n' 'oauth2' ;;
+            *Password*) printf '%s\n' "$GITLAB_TOKEN" ;;
+            *) exit 1 ;;
+          esac
+          EOF
+          chmod 700 "$GIT_ASKPASS"
+
+          git push "$GITLAB_REPO_URL" HEAD:refs/heads/main
