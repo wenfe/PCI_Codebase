@@ -1,0 +1,26 @@
+# Python bytecode and local environments
+__pycache__/
+*.py[cod]
+.venv/
+.uv-cache/
+
+# Local previews, scratch scripts, downloaded runtimes, and session logs
+/tmp/
+/output/
+/logs/
+
+# Jupyter temporary files
+.ipynb_checkpoints/
+
+# Generated simulation caches and outputs
+SAXS_asymmetry/cache/
+SAXS_asymmetry/outputs/
+
+# Imported workflows whose applications, scripts, or test harnesses are absent.
+# Keep the project-specific sync-gitlab.yml workflow versioned.
+/.github/workflows/deploy-pages.yml
+/.github/workflows/playwright.yml
+/.github/workflows/skill-evaluation.yml
+/.github/workflows/test-harness.yml
+/.github/workflows/update-llms-txt.lock.yml
+/.github/workflows/update-llms-txt.md

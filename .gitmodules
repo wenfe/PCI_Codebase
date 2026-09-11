@@ -1,0 +1,3 @@
+[submodule "bremsstrahlung_denoising"]
+	path = bremsstrahlung_denoising
+	url = https://github.com/Helmholtz-AI-Matter/bremsstrahlung_denoising.git
