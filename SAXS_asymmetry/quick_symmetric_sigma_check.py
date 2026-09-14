@@ -14,7 +14,8 @@ By default it compares sigma = 0, 3, 4, 6, 8, and 14 nm for the
 Fraction plots and wire-thickness plots are saved as separate figures with
 consistent rainbow sigma colors. Separate 8-by-6-inch wire-thickness figures
 zoom onto the left and right edges and use the filename suffixes
-``_wire_left_edge`` and ``_wire_right_edge``.
+``_wire_left_edge`` and ``_wire_right_edge``. The edge panels are also saved
+side by side on a shared y-axis with the filename suffix ``_wire_edges``.
 """
 
 from __future__ import annotations
@@ -443,12 +444,12 @@ def save_comparison_plot(
         output_paths.append(output_path)
 
     # Wire-edge profiles depend on sigma, not on the beam case.
-    for edge_name, edge_slug, edge_limits_um in (
-        ("Left edge", "left", (-5.04, -4.99)),
-        ("Right edge", "right", (4.99, 5.04)),
-    ):
-        thickness_figure = plt.figure(figsize=(8, 6), layout="constrained")
-        thickness_axis = thickness_figure.gca()
+    edge_specs = (
+        ("Left edge", "left", (-5.04, -4.99), "(a)"),
+        ("Right edge", "right", (4.99, 5.04), "(b)"),
+    )
+
+    def draw_wire_edge(thickness_axis, edge_name, edge_slug, edge_limits_um, panel_label):
         for sigma_nm in sigmas_nm:
             thickness_axis.plot(
                 wire_axis_um,
@@ -469,6 +470,17 @@ def save_comparison_plot(
             loc="upper left" if edge_slug == "left" else "upper right",
             fontsize=8,
         )
+        # Match the Arial Bold panel labels in schematics_from_code.png.
+        thickness_axis.set_title(
+            panel_label, loc=edge_slug, fontfamily="Arial", fontweight="bold",
+            fontsize=21, color="#182c40",
+        )
+
+    for edge_name, edge_slug, edge_limits_um, panel_label in edge_specs:
+        thickness_figure, thickness_axis = plt.subplots(
+            figsize=(8, 6), layout="constrained"
+        )
+        draw_wire_edge(thickness_axis, edge_name, edge_slug, edge_limits_um, panel_label)
         thickness_figure.suptitle(title)
         thickness_path = path.with_name(
             f"{path.stem}_wire_{edge_slug}_edge{path.suffix}"
@@ -476,6 +488,41 @@ def save_comparison_plot(
         thickness_figure.savefig(thickness_path, dpi=180, bbox_inches="tight")
         plt.close(thickness_figure)
         output_paths.append(thickness_path)
+
+    combined_figure, combined_axes = plt.subplots(
+        1, 2, figsize=(16, 6), sharey=True, gridspec_kw={"wspace": 0}
+    )
+    combined_figure.subplots_adjust(left=0.065, right=0.985, bottom=0.12, top=0.9)
+    for thickness_axis, (edge_name, edge_slug, edge_limits_um, _) in zip(
+        combined_axes, edge_specs
+    ):
+        draw_wire_edge(thickness_axis, edge_name, edge_slug, edge_limits_um, "")
+        thickness_axis.set(xlabel="", title="")
+    combined_axes[1].get_legend().remove()
+    combined_figure.supxlabel(
+        "Distance across wire [µm]",
+        x=(combined_figure.subplotpars.left + combined_figure.subplotpars.right) / 2,
+        y=0.025, fontsize=plt.rcParams["axes.labelsize"],
+    )
+    combined_axes[1].set_ylabel("")
+    combined_axes[0].spines["right"].set_visible(False)
+    combined_axes[1].spines["left"].set_visible(False)
+    combined_axes[1].tick_params(axis="y", left=False)
+    # Avoid overlapping endpoint labels at the join; mark the omitted x range.
+    combined_axes[0].set_xticks([-5.04, -5.03, -5.02, -5.01, -5.00])
+    combined_axes[1].set_xticks([5.00, 5.01, 5.02, 5.03, 5.04])
+    # Draw markers at the join to indicate the omitted x range.
+    combined_axes[1].plot(
+        [-0.004, 0.004, -0.004, 0.004], [0, 0, 1, 1],
+        transform=combined_axes[1].transAxes,
+        marker=[(-1, -0.5), (1, 0.5)], markersize=10,
+        linestyle="none", color="black", clip_on=False,
+    )
+    combined_figure.suptitle(title)
+    combined_path = path.with_name(f"{path.stem}_wire_edges{path.suffix}")
+    combined_figure.savefig(combined_path, dpi=180, bbox_inches="tight")
+    plt.close(combined_figure)
+    output_paths.append(combined_path)
     return output_paths
 
 
