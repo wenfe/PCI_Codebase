@@ -4,22 +4,25 @@ This summary follows [`PCI.py`](../SAXS_asymmetry/PCI.py), [`SAXS-PCI.md`](SAXS-
 
 ## Starting point: Rayleigh–Sommerfeld propagation in real space
 
-For a known sample-exit field, the scalar free-space propagation problem starts
-with the real-space Rayleigh–Sommerfeld I convolution:
+The general scalar free-space starting point is the Rayleigh–Sommerfeld I
+integral. For the complex sample-exit field, wavelength $\lambda$, $k=2\pi/\lambda$,
+time dependence $e^{-i\omega t}$, and downstream distance $Z>0$,
 
 $$
-E_D=E_{\mathrm{exit}}*h_{\mathrm{RS}},
-\qquad
-h_{\mathrm{RS}}(\Delta x,\Delta y;L)
-=\frac{L e^{ikR}}{i\lambda R^2}\left(1+\frac{i}{kR}\right),
-\qquad R=\sqrt{\Delta x^2+\Delta y^2+L^2}.
+E_D(X,Y)=\iint E_{\mathrm{exit}}(x,y)\,
+\underbrace{\frac{Z e^{ikR}}{i\lambda R^2}
+\left(1+\frac{i}{kR}\right)}_{h_{\mathrm{RS}}(X-x,Y-y;Z)}
+\,\mathrm dx\,\mathrm dy,
+\qquad R=\sqrt{(X-x)^2+(Y-y)^2+Z^2}.
 $$
 
-Here $L>0$, $k=2\pi/\lambda$, and the time convention is $e^{-i\omega t}$.
-Angular spectrum expresses the same propagation in Fourier space through
-$\mathcal F[h_{\mathrm{RS}}]=e^{ik_zL}$. The SAXS calculation uses its **paraxial
-Fresnel approximation**, which can also be evaluated with a Fourier transform.
-See the [real-space foundation and approximation hierarchy](propagators.md#rayleighsommerfeld-real-space-foundation).
+This sums complex contributions from the input plane in **real space**.
+Fourier transformation of the exact kernel gives $\mathcal F[h_{\mathrm{RS}}]=e^{ik_zZ}$,
+so angular spectrum is the equivalent **Fourier-space** formulation, including
+evanescent decay. See the [real-space foundation and derivation](propagators.md#rayleighsommerfeld-real-space-foundation)
+for assumptions, conventions, and the Fresnel limit. The code evaluates this
+propagation through angular spectrum.
+
 
 ## Implemented SAXS workflow
 
