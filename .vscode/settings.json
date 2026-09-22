@@ -1,12 +1,3 @@
 {
-    "claudeCodeChat.permissions.yoloMode": false,
-    "python-envs.pythonProjects": [
-        {
-            "path": ".",
-            "envManager": "ms-python.python:venv",
-            "packageManager": "ms-python.python:pip",
-            "python-envs.terminal.autoActivationType": "off",
-            "python.terminal.activateEnvironment": false
-        }
-    ]
+    "claudeCodeChat.permissions.yoloMode": false
 }
