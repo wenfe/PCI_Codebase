@@ -45,20 +45,29 @@ assert math.isclose(float(data["geometric_intercepted_fraction"][0]),
                     float(data["geometric_intercepted_fraction"][2]))
 
 images = [image for image in bpy.data.images if image.source == "FILE"]
-assert len(images) == 6
+overview = next(scene for scene in bpy.data.scenes if scene.name.startswith("00"))
+rosa_panels = [obj for obj in overview.objects if "rosa_offset_um" in obj]
+assert len(rosa_panels) in (0, 3)
+if rosa_panels:
+    assert sorted(obj["rosa_offset_um"] for obj in rosa_panels) == [-4.95, 0, 4.95]
+    assert {Path(obj["source_figure"]).name for obj in rosa_panels} == {
+        "p3129_r0484_22.855.png", "p3129_r0484_22.862.png", "p3129_r0484_22.869.png"}
+    assert all(obj["q_axis_aspect"] == 1 for obj in rosa_panels)
+    assert not any(obj.type == "FONT" and "ROSA" in obj.data.body for obj in overview.objects)
+assert len(images) == 6 + len(rosa_panels)
 assert any(image.name == "saxs_fig2.png" for image in images)
 assert any(image.name == "pci_fig2.png" for image in images)
 assert all(image.packed_file and min(image.size) > 0 for image in images)
 assert all(font.packed_file for font in bpy.data.fonts if font.filepath and font.filepath != "<builtin>")
 
-overview = next(scene for scene in bpy.data.scenes if scene.name.startswith("00"))
 bpy.context.window.scene = overview
 bpy.context.view_layer.update()
+canvas_width, canvas_height = overview.get("figure_canvas", [160, 120])
 for obj in overview.objects:
     if obj.type == "FONT":
         corners = [obj.matrix_world @ Vector(corner) for corner in obj.bound_box]
-        assert min(p.x for p in corners) >= 0 and max(p.x for p in corners) <= 160, obj.name
-        assert min(p.y for p in corners) >= 0 and max(p.y for p in corners) <= 120, obj.name
+        assert min(p.x for p in corners) >= 0 and max(p.x for p in corners) <= canvas_width, obj.name
+        assert min(p.y for p in corners) >= 0 and max(p.y for p in corners) <= canvas_height, obj.name
 
 beamline = next(scene for scene in bpy.data.scenes if scene.name.startswith("04"))
 normal = Vector((-math.sin(math.radians(15)), 0, math.cos(math.radians(15))))

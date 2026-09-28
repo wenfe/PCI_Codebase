@@ -25,6 +25,11 @@ import numpy as np
 SAXS_DIR = Path(__file__).resolve().parent
 NOTEBOOK = SAXS_DIR / "01_calculate_and_save_data.ipynb"
 FIGURE_WIDTH, FIGURE_HEIGHT = 160, 95
+EXPERIMENTAL_OFFSET_FILES = {
+    -5: "p3129_r0484_22.855.tiff",
+    0: "p3129_r0484_22.862.tiff",
+    5: "p3129_r0484_22.869.tiff",
+}
 if str(SAXS_DIR) not in sys.path:
     sys.path.insert(0, str(SAXS_DIR))
 from wire_offset_scene import (
@@ -149,10 +154,20 @@ def draw_profile(data, index, left, bottom, width, height, palette):
     for x in [-fwhm/2, fwhm/2]:
         line("FWHM tick", [(px(x), py(0.47), 0.7), (px(x), py(0.53), 0.7)], palette["blue"], 0.04)
     text(f"FWHM {fwhm:g} µm", (px(0), py(0.62), 0.8), 0.95, palette["blue"], align="CENTER")
-    text("Transverse position, x (µm)", (left+width/2, bottom-3, 0.8), 1.05, palette["muted"], align="CENTER")
+    text("Transverse position, x [(µm)]", (left+width/2, bottom-3, 0.8), 1.05, palette["muted"], align="CENTER")
 
 
-def draw_figure(config, data, interaction_paths, setup_path, resolution):
+def rosa_figure_paths(directory):
+    """Resolve the titleless, equal-q-scale experimental ROSA panel exports."""
+    paths = [Path(directory).resolve() / Path(EXPERIMENTAL_OFFSET_FILES[offset]).with_suffix(".png")
+             for offset in [-5, 0, 5]]
+    for path in paths:
+        if not path.is_file():
+            raise FileNotFoundError(f"ROSA figure not found: {path}")
+    return paths
+
+
+def draw_figure(config, data, interaction_paths, setup_path, resolution, rosa_paths=None):
     """Manuscript layout: setup (a), followed by offset examples (b)--(d)."""
     scene = new_scene("00 | Gaussian wire offsets - complete figure", resolution,
                       round(resolution*FIGURE_HEIGHT/FIGURE_WIDTH), 16)
@@ -167,7 +182,15 @@ def draw_figure(config, data, interaction_paths, setup_path, resolution):
     line("Section rule", [(9, 55, 1), (151, 55, 1)], palette["rule"], 0.035)
     for index, (offset, path, left) in enumerate(zip(data["offsets_um"], interaction_paths, [9, 58, 107])):
         sign = f"{offset:+g}" if offset else "0"
-        text(f"({chr(98+index)})  Δx = {sign} µm", (left, 51.5, 1), 1.8, palette["ink"], bold=True)
+        # Position a smaller zero explicitly: some Arial versions lack the ₀ glyph.
+        heading = text(f"({chr(98+index)})  x", (left, 51.5, 1), 1.8, palette["ink"], bold=True)
+        heading["offset_notation"], heading["offset_um"] = "x_0", float(offset)
+        bpy.context.view_layer.update()
+        subscript = text("0", (left+heading.dimensions.x+0.1, 51.0, 1),
+                         1.17, palette["ink"], bold=True)
+        bpy.context.view_layer.update()
+        text(f" = {sign} µm", (subscript.location.x+subscript.dimensions.x, 51.5, 1),
+             1.8, palette["ink"], bold=True)
         image_plane(f"Blender-rendered offset {offset:g} um", path, (left+21.75, 32.5, 0), 43.5, 43.5*0.68)
         if index == 0:
             text(f"{2*float(data['wire_radius_um']):g} µm Cu wire", (left+27, 46.6, 1), 1.08,
@@ -175,10 +198,36 @@ def draw_figure(config, data, interaction_paths, setup_path, resolution):
             text("Gaussian XFEL", (left+1, 43, 1), 1.1, palette["beam"])
         if index == 1:
             text("Incident Gaussian", (left, 16.8, 1), 1.02, palette["blue"], bold=True)
-            text("Cu wire silhouette", (left+24, 16.8, 1), 1.02, palette["copper"])
+            text("Cu wire edge", (left+24, 16.8, 1), 1.02, palette["copper"])
         draw_profile(data, index, left, 4, 43.5, 10, palette)
+    figure_height = FIGURE_HEIGHT
     scene["panel_layout"] = "(a) experimental setup; (b)-(d) transverse offsets with normalized incident Gaussian profiles"
-    scene["figure_canvas"] = [FIGURE_WIDTH, FIGURE_HEIGHT]
+    if rosa_paths is not None:
+        if len(rosa_paths) != 3:
+            raise ValueError("Provide three ROSA figures in negative, zero, positive offset order")
+        # Extend the canvas below the existing figure, preserving its scale.
+        panel_width = 46
+        rosa_images = [bpy.data.images.load(str(path), check_existing=True) for path in rosa_paths]
+        for image in rosa_images:
+            image.reload()
+        panel_heights = [panel_width * image.size[1] / image.size[0] for image in rosa_images]
+        row_height = math.ceil(max(panel_heights) + 4)
+        for obj in scene.objects:
+            if obj != scene.camera:
+                obj.location.y += row_height
+        figure_height += row_height
+        scene.render.resolution_y = round(resolution * figure_height / FIGURE_WIDTH)
+        scene.camera.location.y = figure_height / 2
+        line("ROSA section rule", [(9, row_height - 0.5, 1), (151, row_height - 0.5, 1)],
+             palette["rule"], 0.035)
+        for offset, path, left, height in zip([-4.95, 0, 4.95], rosa_paths, [9, 58, 107], panel_heights):
+            panel = image_plane(f"ROSA experimental SAXS offset {offset:+g} um", path,
+                                (left + 21.75, 2 + height / 2, 0), panel_width, height)
+            panel["rosa_offset_um"] = offset
+            panel["source_figure"] = str(Path(path).resolve())
+            panel["q_axis_aspect"] = 1.0
+        scene["panel_layout"] += "; untitled experimental ROSA SAXS at -4.95, 0, +4.95 µm, equal q-axis scaling, one shared colorbar"
+    scene["figure_canvas"] = [FIGURE_WIDTH, figure_height]
     scene["editing"] = "Scenes 01–03 contain editable interactions; scene 04 contains the beamline. Re-run the script to refresh this presentation."
     return scene
 
@@ -192,6 +241,8 @@ def main():
     parser.add_argument("--output-stem", default="gaussian_wire_offsets_blender")
     parser.add_argument("--resolution", type=int, default=3200, help="Combined figure width in pixels")
     parser.add_argument("--samples", type=int, default=48, help="Cycles samples for each 3D scene")
+    parser.add_argument("--rosa-figure-dir", type=Path,
+                        help="Add titleless PNGs made by export_rosa_experimental_panels.py with equal q-axis scaling")
     # Blender consumes its own arguments; application arguments follow --.
     args = parser.parse_args(sys.argv[sys.argv.index("--")+1:] if "--" in sys.argv else [])
     if (not args.output_stem or args.output_stem in {".", ".."}
@@ -207,6 +258,11 @@ def main():
         parser.error("Resolution must be at least 800 and samples at least 1")
     if not math.isfinite(config["WIRE_RADIUS"]) or config["WIRE_RADIUS"] <= 0:
         parser.error("Notebook wire radius must be finite and positive")
+    rosa_paths = None
+    if args.rosa_figure_dir is not None:
+        if not np.allclose(args.offsets, [-5, 0, 5], rtol=0, atol=0.051):
+            parser.error("ROSA columns require offsets corresponding to -4.95, 0, +4.95 µm")
+        rosa_paths = rosa_figure_paths(args.rosa_figure_dir)
     data = make_plot_data(config, args.offsets, fwhm)
     tag = lambda value: f"{value:g}".replace(".", "p")
     sigma = f"sigmaL_{tag(config['WIRE_SIGMA_LEFT_NM'])}nm_sigmaR_{tag(config['WIRE_SIGMA_RIGHT_NM'])}nm"
@@ -228,7 +284,7 @@ def main():
     setup_path = output/f"{args.output_stem}_experimental_geometry.png"
     render(setup, setup_path)
     paths.append(setup_path)
-    figure = draw_figure(config, data, interactions, setup_path, args.resolution)
+    figure = draw_figure(config, data, interactions, setup_path, args.resolution, rosa_paths)
     figure_path = output/f"{args.output_stem}.png"
     render(figure, figure_path)
     paths.append(figure_path)
@@ -250,10 +306,11 @@ def main():
         notebook_numeric_settings=config, offsets_um=args.offsets, target_intensity_fwhm_um=fwhm,
         coordinate_mapping="Blender X = beam z; Blender Y = transverse x; Blender Z = wire y; one unit = one µm in interaction scenes",
         offset_definition="wire centre minus beam axis along the transverse coordinate",
-        panel_layout="(a) experimental setup; (b)-(d) illustrative offsets, with profile plots below",
+        panel_layout=figure["panel_layout"],
         incident_beam_direction="Editable Blender arrow along physical +z (Blender +X), before the Cu wire in panel (a)",
         reflected_beam_direction="Editable red arrow along the reflected SAXS branch toward Jungfrau in panel (a)",
-        offset_annotations="Offset values appear only in panel headings; lower dimension marks and duplicate labels are omitted",
+        experimental_offset_files={f"{offset:+g}": EXPERIMENTAL_OFFSET_FILES[offset]
+                                   for offset in args.offsets if offset in EXPERIMENTAL_OFFSET_FILES},
         coordinate_axes="Panels (b)-(d): x transverse to beam and wire, y along wire, z along beam; shared origin at beam exit",
         incident_intensity="I(r)/I0 = exp(-4 ln(2) r^2/FWHM^2)",
         beam_style=BEAM_STYLE,
@@ -268,8 +325,13 @@ def main():
         reflected_beams="Exactly one red 3D Gaussian-style reflected SAXS branch beginning on the upper HAPG surface and reaching the Jungfrau panel. Its width and path are illustrative, not separate physical ray traces from each mirror.",
         mirrors="Two original green Highly Annealed Pyrolytic Graphite plates restored, including their locations, dimensions and parallel 15-degree tilts. Apparatus dimensions, distances and angles are schematic.",
         scene_names=[scene.name for scene in bpy.data.scenes], samples=args.samples,
-        combined_resolution=[args.resolution, round(args.resolution*FIGURE_HEIGHT/FIGURE_WIDTH)], outputs=[str(path) for path in paths],
+        combined_resolution=[figure.render.resolution_x, figure.render.resolution_y], outputs=[str(path) for path in paths],
     )
+    if rosa_paths is not None:
+        metadata["rosa_wire_scan"] = dict(offsets_um=[-4.95, 0, 4.95],
+                                          figures=[str(path) for path in rosa_paths],
+                                          kind="experimental SAXS", q_axis_aspect=1, titles=False,
+                                          shared_colorbar=True)
     (output/f"{args.output_stem}_metadata.json").write_text(json.dumps(metadata, indent=2)+"\n", encoding="utf-8")
     print("Created native Blender scenes and renders:", flush=True)
     for path in paths:
@@ -278,6 +340,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 

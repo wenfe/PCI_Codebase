@@ -1,4 +1,4 @@
-"""Quickly compare symmetric wire-edge sigmas for divergent Mark1300 SAXS.
+"""Quickly compare wire-edge sigmas for divergent Mark1300 SAXS.
 
 The script uses beam/wire separability to calculate the Mark1300 left fraction
 with inexpensive one-dimensional FFTs and overlays Erik's measured motor scan.
@@ -16,6 +16,20 @@ consistent rainbow sigma colors. Separate 8-by-6-inch wire-thickness figures
 zoom onto the left and right edges and use the filename suffixes
 ``_wire_left_edge`` and ``_wire_right_edge``. The edge panels are also saved
 side by side on a shared y-axis with the filename suffix ``_wire_edges``.
+That combined edge figure compares (sigmaL, sigmaR) = (0, 0), (3, 3),
+(4, 4), (4.67, 0), (6, 8), and (8, 14) nm, in that order.
+
+For independent edges, pass repeatable ``--sigma-pair LEFT RIGHT`` arguments,
+for example ``--sigma-pair 4 8 --sigma-pair 8 4``. This mode writes per-pair
+tables and ``sigmaL4_sigmaR8_sigmaL8_sigmaR4_pairs_7p11um.png`` comparing shifted Gaussian
+left/right intensities with ``left_exp.npy`` and ``right_exp.npy``. Each scan
+shares max(left + right) as its normalization, not separate half maxima.
+Experimental offsets come directly from ``motor_positions_um.npy``.
+The second panel retains the shifted-mask fraction and the independently
+supplied motor left-fraction reference; it is not recomputed from left_exp.
+Both panels use the same q-mask shift (default +0.005 nm^-1), so the simulated
+fraction is left / (left + right) from the intensity panel.
+No fitting, amplitude adjustment, or position shift is applied.
 """
 
 from __future__ import annotations
@@ -23,6 +37,7 @@ from __future__ import annotations
 import argparse
 import csv
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
@@ -57,6 +72,62 @@ ERIK_DIR = SAXS_DIR / "inputs" / "experimental" / "Erik"
 MARK1300_BEAM_CASES = {
     "7p11um": 7.11,
 }
+WIRE_EDGE_SIGMA_PAIRS_NM = (
+    (0.0, 0.0),
+    (3.0, 3.0),
+    (4.0, 4.0),
+    (4.67, 0.0),
+    (6.0, 8.0),
+    (8.0, 14.0),
+)
+
+
+@dataclass(frozen=True)
+class Mark1300Scan:
+    """Relative 1-D signals; left/right retain the unshifted integer-bin masks."""
+
+    left: np.ndarray
+    right: np.ndarray
+    shifted_fraction: np.ndarray
+    shifted_left: np.ndarray
+    shifted_right: np.ndarray
+
+
+def normalize_saxs_halves(
+    left: np.ndarray, right: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
+    """Use one peak-total denominator, preserving the left/right ratio."""
+    if left.ndim != 1 or left.size == 0 or left.shape != right.shape:
+        raise ValueError("SAXS halves must be non-empty matching 1-D arrays.")
+    if not np.all(np.isfinite(left)) or not np.all(np.isfinite(right)):
+        raise ValueError("SAXS halves must contain only finite intensities.")
+    if np.any(left < 0) or np.any(right < 0):
+        raise ValueError("SAXS intensities must be non-negative.")
+    scale = float(np.max(left + right))
+    if not np.isfinite(scale) or scale <= 0:
+        raise ValueError("Maximum SAXS left + right sum must be finite and positive.")
+    return left / scale, right / scale
+
+
+def load_experimental_saxs() -> dict[str, np.ndarray]:
+    """Load measured halves with the already converted target offsets."""
+    paths = {
+        "offsets_um": ERIK_DIR / "motor_positions_um.npy",
+        "left": ERIK_DIR / "left_exp.npy",
+        "right": ERIK_DIR / "right_exp.npy",
+    }
+    missing = [path for path in paths.values() if not path.exists()]
+    if missing:
+        raise FileNotFoundError(
+            "Missing experimental SAXS file(s): "
+            + ", ".join(str(path) for path in missing)
+        )
+    data = {key: np.asarray(np.load(path), dtype=float) for key, path in paths.items()}
+    offsets = data["offsets_um"]
+    if offsets.shape != data["left"].shape or not np.all(np.isfinite(offsets)):
+        raise ValueError("Experimental offsets must be finite and match the SAXS halves.")
+    data["left"], data["right"] = normalize_saxs_halves(data["left"], data["right"])
+    return data
 
 
 def load_erik_motor_reference() -> dict[str, np.ndarray]:
@@ -93,8 +164,8 @@ def voxelized_chord_profile() -> np.ndarray:
 
 def symmetric_blur(profile: np.ndarray, sigma_nm: float) -> np.ndarray:
     """Apply the same constant-boundary Gaussian blur used by notebook 01."""
-    if sigma_nm < 0:
-        raise ValueError("Sigma values must be non-negative.")
+    if not np.isfinite(sigma_nm) or sigma_nm < 0:
+        raise ValueError("Sigma values must be finite and non-negative.")
     if sigma_nm == 0:
         return profile.copy()
     return gaussian_filter1d(
@@ -158,12 +229,34 @@ def mark1300_left_fraction_scan(
     sigma_right_nm: float,
     q_mask_shift_nm_inv: float = Q_MASK_SHIFT_NM_INV,
 ) -> np.ndarray:
-    """Calculate the divergent Mark1300 fraction with an exact 1-D reduction.
+    """Calculate the shifted-mask fraction with the shared 1-D reduction."""
+    return mark1300_saxs_scan(
+        fwhm_um, offsets_um, sigma_left_nm, sigma_right_nm, q_mask_shift_nm_inv
+    ).shifted_fraction
 
+
+def mark1300_saxs_scan(
+    fwhm_um: float,
+    offsets_um: np.ndarray,
+    sigma_left_nm: float,
+    sigma_right_nm: float,
+    q_mask_shift_nm_inv: float = Q_MASK_SHIFT_NM_INV,
+) -> Mark1300Scan:
+    """Calculate unshifted/shifted halves and the shifted fraction using one FFT.
+
+    The unshifted integer-bin mask matches notebook 01's mark1300_sides,
+    not the fractional-bin mask used for the shifted left fraction.
     The Gaussian beam and straight wire are separable in x and y.  Consequently
-    the y Fourier factor cancels from L/(L+R), making this 1-D FFT equivalent to
-    the central-row fraction of notebook 01's 2-D Lorentz propagation.
+    the y Fourier factor cancels from L/(L+R) and peak-total normalization.
+    The returned raw halves are relative 1-D signals, not 2-D detector powers.
     """
+    if not np.isfinite(fwhm_um) or fwhm_um <= 0:
+        raise ValueError("Beam FWHM must be finite and positive.")
+    if not np.isfinite(q_mask_shift_nm_inv):
+        raise ValueError("Q-mask shift must be finite.")
+    offsets_um = np.asarray(offsets_um, dtype=float)
+    if offsets_um.ndim != 1 or offsets_um.size == 0 or not np.all(np.isfinite(offsets_um)):
+        raise ValueError("Offsets must be a non-empty finite 1-D array.")
     copper = PCI.Cu()
     field_at_target = gaussian_target_line_field(fwhm_um)
     axis_nm = (np.arange(GRID_SIZE) - GRID_SIZE // 2) * PIXEL_SIZE_NM
@@ -202,7 +295,12 @@ def mark1300_left_fraction_scan(
         1.0,
     )
 
-    fractions = np.empty(offsets_um.size, dtype=float)
+    center = GRID_SIZE // 2
+    half_width = int(np.round(MARK1300_Q_MIN_NM_INV / Q_STEP_NM_INV))
+    unshifted_left = np.empty(offsets_um.size, dtype=float)
+    unshifted_right = np.empty(offsets_um.size, dtype=float)
+    shifted_left = np.empty(offsets_um.size, dtype=float)
+    shifted_right = np.empty(offsets_um.size, dtype=float)
     for index, offset_um in enumerate(offsets_um):
         shifted_chord_nm = nd_shift(
             centered_chord_nm,
@@ -231,9 +329,20 @@ def mark1300_left_fraction_scan(
         ) ** 2
         left = float(np.sum(detector_lineout * left_weights))
         right = float(np.sum(detector_lineout * right_weights))
-        fractions[index] = left / (left + right)
+        if not np.isfinite(left + right) or left + right <= 0:
+            raise ValueError(f"Invalid shifted SAXS total at offset {offset_um:g} um.")
+        shifted_left[index] = left
+        shifted_right[index] = right
+        unshifted_left[index] = np.sum(detector_lineout[:center - half_width])
+        unshifted_right[index] = np.sum(detector_lineout[center + half_width:])
 
-    return fractions
+    return Mark1300Scan(
+        left=unshifted_left,
+        right=unshifted_right,
+        shifted_fraction=shifted_left / (shifted_left + shifted_right),
+        shifted_left=shifted_left,
+        shifted_right=shifted_right,
+    )
 
 
 def validate_mark1300_reduction() -> None:
@@ -395,10 +504,6 @@ def save_comparison_plot(
         * WIRE_VOXEL_SIZE_NM / PCI.um
     )
     unblurred_chord_nm = voxelized_chord_profile()
-    thickness_profiles_um = {
-        sigma_nm: symmetric_blur(unblurred_chord_nm, sigma_nm) / PCI.um
-        for sigma_nm in sigmas_nm
-    }
     output_paths: list[Path] = []
     for column, result in enumerate(results.values()):
         figure, fraction_axis = plt.subplots(
@@ -449,14 +554,27 @@ def save_comparison_plot(
         ("Right edge", "right", (4.99, 5.04), "(b)"),
     )
 
-    def draw_wire_edge(thickness_axis, edge_name, edge_slug, edge_limits_um, panel_label):
-        for sigma_nm in sigmas_nm:
+    def draw_wire_edge(
+        thickness_axis, edge_name, edge_slug, edge_limits_um, panel_label,
+        sigma_pairs=None,
+    ):
+        edge_pairs = (
+            tuple((sigma_nm, sigma_nm) for sigma_nm in sigmas_nm)
+            if sigma_pairs is None else sigma_pairs
+        )
+        edge_colors = plt.get_cmap("rainbow")(np.linspace(0.0, 1.0, len(edge_pairs)))
+        for (sigma_left, sigma_right), color in zip(edge_pairs, edge_colors):
+            label = (
+                rf"$\sigma_L=\sigma_R={sigma_left:g}$ nm"
+                if sigma_left == sigma_right else
+                rf"$\sigma_L={sigma_left:g},\ \sigma_R={sigma_right:g}$ nm"
+            )
             thickness_axis.plot(
                 wire_axis_um,
-                thickness_profiles_um[sigma_nm],
-                color=sigma_colors[sigma_nm],
+                asymmetric_blur(unblurred_chord_nm, sigma_left, sigma_right) / PCI.um,
+                color=color,
                 linewidth=2,
-                label=sigma_labels[sigma_nm],
+                label=label,
             )
         thickness_axis.set(
             xlabel="Distance across wire [µm]",
@@ -496,7 +614,10 @@ def save_comparison_plot(
     for thickness_axis, (edge_name, edge_slug, edge_limits_um, _) in zip(
         combined_axes, edge_specs
     ):
-        draw_wire_edge(thickness_axis, edge_name, edge_slug, edge_limits_um, "")
+        draw_wire_edge(
+            thickness_axis, edge_name, edge_slug, edge_limits_um, "",
+            sigma_pairs=WIRE_EDGE_SIGMA_PAIRS_NM,
+        )
         thickness_axis.set(xlabel="", title="")
     combined_axes[1].get_legend().remove()
     combined_figure.supxlabel(
@@ -526,43 +647,183 @@ def save_comparison_plot(
     return output_paths
 
 
-def parse_args() -> argparse.Namespace:
+def save_sigma_pair_plot(
+    path: Path,
+    offsets_um: np.ndarray,
+    scans: dict[tuple[float, float], Mark1300Scan],
+    experimental: dict[str, np.ndarray],
+    motor: dict[str, np.ndarray],
+    q_mask_shift_nm_inv: float,
+) -> None:
+    """Compare shifted, peak-total-normalized halves and measured fractions."""
+    import matplotlib.pyplot as plt
+
+    figure, axes = plt.subplots(1, 2, figsize=(16, 6), layout="constrained")
+    colors = (
+        ["tab:blue"] if len(scans) == 1
+        else plt.get_cmap("rainbow")(np.linspace(0.0, 1.0, len(scans)))
+    )
+    for ((sigma_left, sigma_right), scan), color in zip(scans.items(), colors):
+        label = rf"$\sigma_L={sigma_left:g},\ \sigma_R={sigma_right:g}$ nm"
+        left, right = normalize_saxs_halves(scan.shifted_left, scan.shifted_right)
+        axes[0].plot(offsets_um, left, "-", color=color, label=f"{label}, left")
+        axes[0].plot(offsets_um, right, "--", color=color, label=f"{label}, right")
+        axes[1].plot(offsets_um, scan.shifted_fraction, color=color, label=label)
+    axes[0].plot(
+        experimental["offsets_um"], experimental["left"], "o",
+        color="tab:purple", ms=5, label="Experimental SAXS left", zorder=5,
+    )
+    axes[0].plot(
+        experimental["offsets_um"], experimental["right"], "s",
+        color="tab:purple", mfc="none", ms=5,
+        label="Experimental SAXS right", zorder=5,
+    )
+    axes[0].set(
+        xlabel="Wire offset [um]", ylabel="SAXS intensity / max(left + right)",
+        title=(
+            "(a) Gaussian 7.11 um and experiment:\n"
+            f"q-mask shift {q_mask_shift_nm_inv:+g} nm$^{{-1}}$"
+        ),
+        ylim=(0, 1.05),
+    )
+    axes[1].plot(
+        motor["motor_offsets_um"], motor["motor_left_fraction"], "kx",
+        ms=5, label="Experiment (stored motor left fraction)", zorder=5,
+    )
+    axes[1].axhline(0.5, color="0.5", linewidth=0.8, linestyle=":")
+    axes[1].set(
+        xlabel="Wire offset [um]", ylabel=r"$f_L$",
+        title=f"(b) Fraction: q-mask shift {q_mask_shift_nm_inv:+g} nm$^{{-1}}$",
+        ylim=(0, 1),
+    )
+    for axis in axes:
+        axis.grid(alpha=0.25)
+        axis.legend(fontsize=8, loc="best")
+    figure.savefig(path, dpi=180, bbox_inches="tight")
+    plt.close(figure)
+
+
+def run_sigma_pair_comparison(
+    output_dir: Path,
+    offsets_um: np.ndarray,
+    sigma_pairs: tuple[tuple[float, float], ...],
+    q_mask_shift_nm_inv: float,
+    *,
+    no_plot: bool,
+) -> None:
+    """Save independent-edge trials without replacing symmetric-sweep outputs."""
+    experimental = load_experimental_saxs()
+    motor = None if no_plot else load_erik_motor_reference()
+    scans: dict[tuple[float, float], Mark1300Scan] = {}
+    pair_tags: list[str] = []
+    for sigma_left, sigma_right in sigma_pairs:
+        scan = mark1300_saxs_scan(
+            7.11, offsets_um, sigma_left, sigma_right, q_mask_shift_nm_inv
+        )
+        scans[(sigma_left, sigma_right)] = scan
+        left, right = normalize_saxs_halves(scan.shifted_left, scan.shifted_right)
+        left_tag = str(sigma_left).removesuffix(".0").replace(".", "p")
+        right_tag = str(sigma_right).removesuffix(".0").replace(".", "p")
+        pair_tags.append(f"sigmaL{left_tag}_sigmaR{right_tag}")
+        table_path = output_dir / (
+            f"mark1300_saxs_7p11um_sigmaL_{left_tag}nm_sigmaR_{right_tag}nm.dat"
+        )
+        np.savetxt(
+            table_path,
+            np.column_stack((offsets_um, left, right, left + right, scan.shifted_fraction)),
+            header=(
+                f"sigma_left_nm={sigma_left:g} sigma_right_nm={sigma_right:g} "
+                f"q_mask_shift_nm_inv={q_mask_shift_nm_inv:g}\n"
+                "Shifted halves share max(left + right) over the offset scan; "
+                "both halves and shifted_left_fraction use the same q shift.\n"
+                "offset_um left_normalized right_normalized total_normalized "
+                "shifted_left_fraction"
+            ),
+            fmt="%.10g",
+        )
+        print(f"Saved {table_path}")
+    experimental_path = output_dir / "experimental_saxs_left_right_normalized.dat"
+    np.savetxt(
+        experimental_path,
+        np.column_stack((
+            experimental["offsets_um"], experimental["left"], experimental["right"],
+        )),
+        header=(
+            "Both experimental halves share max(left_exp + right_exp); "
+            "saved motor offsets used without further conversion.\n"
+            "offset_um left_normalized right_normalized"
+        ),
+        fmt="%.10g",
+    )
+    print(f"Saved {experimental_path}")
+    if motor is not None:
+        figure_path = output_dir / f"{'_'.join(pair_tags)}_pairs_7p11um.png"
+        save_sigma_pair_plot(
+            figure_path, offsets_um, scans, experimental, motor, q_mask_shift_nm_inv
+        )
+        print(f"Saved {figure_path}")
+
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
+    sigma_options = parser.add_mutually_exclusive_group()
+    sigma_options.add_argument(
         "--sigmas",
         nargs="+",
         type=float,
         default=[0.0, 3.0, 4.0, 6.0, 8.0, 14.0],
         help="Symmetric sigma values in nm (default: 0 3 4 6 8 14).",
     )
+    sigma_options.add_argument(
+        "--sigma-pair",
+        nargs=2,
+        type=float,
+        action="append",
+        metavar=("LEFT_NM", "RIGHT_NM"),
+        help=(
+            "Independent edge sigmas; repeat to compare pairs. Writes shifted "
+            "left/right SAXS comparison and matching fractions instead of the "
+            "symmetric-sweep figures."
+        ),
+    )
     parser.add_argument(
         "--q-mask-shift-nm-inv",
         type=float,
         default=Q_MASK_SHIFT_NM_INV,
-        help="Mark1300 q-mask-centre shift in nm^-1 (default: 0.005).",
+        help=(
+            "Mark1300 q-mask-centre shift for both intensities and fractions "
+            "in nm^-1 (default: 0.005)."
+        ),
     )
     parser.add_argument(
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Destination for tables and separate fraction and wire-edge figures.",
+        help="Destination for tables and comparison figures.",
     )
     parser.add_argument(
         "--no-plot",
         action="store_true",
         help="Write tables without creating the PNG figures.",
     )
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def main() -> int:
     args = parse_args()
     sigmas_nm = tuple(float(value) for value in args.sigmas)
     q_mask_shift_nm_inv = float(args.q_mask_shift_nm_inv)
-    if not sigmas_nm or any(value < 0 for value in sigmas_nm):
-        raise ValueError("Provide one or more non-negative sigma values.")
+    if not np.isfinite(q_mask_shift_nm_inv):
+        raise ValueError("Q-mask shift must be finite.")
+    if not sigmas_nm or any(not np.isfinite(value) or value < 0 for value in sigmas_nm):
+        raise ValueError("Provide one or more finite, non-negative sigma values.")
     if len(set(sigmas_nm)) != len(sigmas_nm):
         raise ValueError("Sigma values must be unique.")
+    sigma_pairs = tuple((float(left), float(right)) for left, right in (args.sigma_pair or []))
+    if any(not np.isfinite(value) or value < 0 for pair in sigma_pairs for value in pair):
+        raise ValueError("Sigma-pair values must be finite and non-negative.")
+    if len(set(sigma_pairs)) != len(sigma_pairs):
+        raise ValueError("Sigma pairs must be unique.")
 
     output_dir = args.output_dir.resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -574,6 +835,17 @@ def main() -> int:
     )
 
     validate_mark1300_reduction()
+
+    if sigma_pairs:
+        run_sigma_pair_comparison(
+            output_dir, offsets_um, sigma_pairs, q_mask_shift_nm_inv,
+            no_plot=args.no_plot,
+        )
+        print(
+            f"Completed {len(sigma_pairs)} independent-edge trial(s); "
+            f"both panels use q-mask shift {q_mask_shift_nm_inv:+g} nm^-1."
+        )
+        return 0
 
     mark1300_results: dict[str, dict[str, object]] = {}
     for case_name, beam_fwhm_um in MARK1300_BEAM_CASES.items():
