@@ -47,27 +47,27 @@ Average selected detector rows -> exclude central q region -> sum left/right
 
 ## 1. The diffraction equation behind the code
 
-Let $(x,y)$ denote sample-plane coordinates, $(X,Y)$ detector-plane coordinates, and $L$ the **sample-to-detector distance**. For wavelength $\lambda$ and $k=2\pi/\lambda$, the Fresnel diffraction integral is
+Let $(x,y)$ denote sample-plane coordinates, $(X,Y)$ detector-plane coordinates, and $Z$ the **sample-to-detector distance**. For wavelength $\lambda$ and $k=2\pi/\lambda$, the Fresnel diffraction integral is
 
 $$
-E_D(X,Y)=\frac{e^{ikL}}{i\lambda L}
+E_D(X,Y)=\frac{e^{ikZ}}{i\lambda Z}
 \iint E_{\mathrm{exit}}(x,y)
-\exp\!\left[\frac{ik}{2L}\big((X-x)^2+(Y-y)^2\big)\right]
+\exp\!\left[\frac{ik}{2Z}\big((X-x)^2+(Y-y)^2\big)\right]
 \,\mathrm dx\,\mathrm dy.
 $$
 
 Expanding the squares separates the expression into an output phase and a Fourier transform:
 
 $$
-E_D(X,Y)=\frac{e^{ikL}}{i\lambda L}
-e^{ik(X^2+Y^2)/(2L)}
+E_D(X,Y)=\frac{e^{ikZ}}{i\lambda Z}
+e^{ik(X^2+Y^2)/(2Z)}
 \mathcal F\!\left[
-E_{\mathrm{exit}}(x,y)e^{ik(x^2+y^2)/(2L)}
+E_{\mathrm{exit}}(x,y)e^{ik(x^2+y^2)/(2Z)}
 \right](q_x,q_y),
 $$
 
 $$
-q_x=\frac{kX}{L},\qquad q_y=\frac{kY}{L},
+q_x=\frac{kX}{Z},\qquad q_y=\frac{kY}{Z},
 \qquad
 \mathcal F[g](q_x,q_y)=\iint g(x,y)e^{-i(q_xx+q_yy)}\,\mathrm dx\,\mathrm dy.
 $$
@@ -77,9 +77,9 @@ This is the equation developed in `SAXS-PCI.md` and implemented, with the discre
 The detector intensity is
 
 $$
-I_D(X,Y)=\frac{1}{(\lambda L)^2}
+I_D(X,Y)=\frac{1}{(\lambda Z)^2}
 \left|\mathcal F\!\left[
-E_{\mathrm{exit}}e^{ik(x^2+y^2)/(2L)}
+E_{\mathrm{exit}}e^{ik(x^2+y^2)/(2Z)}
 \right]\right|^2.
 $$
 
@@ -162,12 +162,12 @@ The SAXS propagator's essential operations are:
 
 ```python
 # Reduced form of the existing implementation; all lengths are in nm.
-new_pixel_size = wavelength * L / (N * old_pixel_size)
+new_pixel_size = wavelength * Z / (N * old_pixel_size)
 
-U = fft2(field_in * np.exp(1j * k * (x**2 + y**2) / (2 * L)))
+U = fft2(field_in * np.exp(1j * k * (x**2 + y**2) / (2 * Z)))
 X, Y = output_grid(new_pixel_size, N)
-R = np.exp(1j * k * L) / (1j * wavelength * L)
-R = R * np.exp(1j * k * (X**2 + Y**2) / (2 * L))
+R = np.exp(1j * k * Z) / (1j * wavelength * Z)
+R = R * np.exp(1j * k * (X**2 + Y**2) / (2 * Z))
 
 field_out = R * fftshift(U)
 intensity = np.abs(field_out)**2
@@ -187,11 +187,11 @@ Two discrete conventions matter when comparing this code with the continuous equ
 A single-FFT Fresnel calculation links the input and output sampling:
 
 $$
-\Delta X=\frac{\lambda L}{N\Delta x},\qquad
-\Delta q_x=\frac{k\Delta X}{L}=\frac{2\pi}{N\Delta x}.
+\Delta X=\frac{\lambda  Z}{N\Delta x},\qquad
+\Delta q_x=\frac{k\Delta X}{Z}=\frac{2\pi}{N\Delta x}.
 $$
 
-For a plane wave incident along the optical axis, $q_x\simeq kX/L$ is the small-angle transverse momentum transfer. The total scattering-vector magnitude for scattering angle $\alpha$ is $q=2k\sin(\alpha/2)\simeq k\alpha$. With curved illumination, the notebook's signed q axis remains a detector coordinate relative to the nominal optical axis; the incident field contains a range of local directions.
+For a plane wave incident along the optical axis, $q_x\simeq kX/Z$ is the small-angle transverse momentum transfer. The total scattering-vector magnitude for scattering angle $\alpha$ is $q=2k\sin(\alpha/2)\simeq k\alpha$. With curved illumination, the notebook's signed q axis remains a detector coordinate relative to the nominal optical axis; the incident field contains a range of local directions.
 
 | Current notebook parameter | Value |
 |---|---|
@@ -222,15 +222,15 @@ Notebook 01 also defines `Q_AXIS = np.linspace(-Q_MAX, Q_MAX, N)`. This is sligh
 Fraunhofer propagation makes the additional approximation
 
 $$
-\exp\!\left[\frac{ik(x^2+y^2)}{2L}\right]\simeq1
+\exp\!\left[\frac{ik(x^2+y^2)}{2Z}\right]\simeq1
 $$
 
 over the significant input field. Then
 
 $$
 I_{\mathrm{Fraunhofer}}(X,Y)
-\simeq\frac{1}{(\lambda L)^2}
-\left|\mathcal F[E_{\mathrm{exit}}](kX/L,kY/L)\right|^2.
+\simeq\frac{1}{(\lambda Z)^2}
+\left|\mathcal F[E_{\mathrm{exit}}](kX/Z,kY/Z)\right|^2.
 $$
 
 This extra step distinguishes Fraunhofer from Fresnel diffraction; both are Fourier-transform calculations. See the derivation in [MIT Optics, Recitation 3, sections 3–4](https://ocw.mit.edu/courses/2-71-optics-spring-2014/821609ddc97b5e4a46e1e5e5c8ba29cc_MIT2_71S14_Rec3.pdf).
@@ -238,8 +238,8 @@ This extra step distinguishes Fraunhofer from Fresnel diffraction; both are Four
 For a characteristic illuminated radius $a$, the phase being neglected is approximately
 
 $$
-\Delta\phi_F=\frac{\pi a^2}{\lambda L}=\pi N_F,
-\qquad N_F=\frac{a^2}{\lambda L}.
+\Delta\phi_F=\frac{\pi a^2}{\lambda Z}=\pi N_F,
+\qquad N_F=\frac{a^2}{\lambda Z}.
 $$
 
 Fraunhofer requires this phase variation to be small enough for the desired accuracy. At the notebook's 1.31 m distance:
@@ -255,7 +255,7 @@ These are illustrative phase scales, not an error estimate for the final SAXS ra
 Even if that propagation phase were neglected, the **incident Gaussian phase would remain in $E_{\mathrm{exit}}$**. With the implemented source sign, the source and input propagation phases combine as
 
 $$
-E_{\mathrm{in}}e^{ikr^2/(2L)}
+E_{\mathrm{in}}e^{ikr^2/(2Z)}
 \propto e^{-r^2/w_t^2}
 \exp\!\left[\frac{ikr^2}{2}\left(\frac{1}{L}-\frac{1}{R_t}\right)\right].
 $$

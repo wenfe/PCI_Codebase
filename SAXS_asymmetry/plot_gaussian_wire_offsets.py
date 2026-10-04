@@ -233,7 +233,7 @@ def draw_figure(config, data, interaction_paths, setup_path, resolution, rosa_pa
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__) 
     parser.add_argument("--offsets", type=float, nargs=3, default=[-5, 0, 5], metavar="UM")
     parser.add_argument("--fwhm", type=float, help="Target-plane intensity FWHM in µm")
     parser.add_argument("--notebook", type=Path, default=NOTEBOOK)
