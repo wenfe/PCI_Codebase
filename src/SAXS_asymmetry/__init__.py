@@ -1,2 +1,1 @@
-def main() -> None:
-    print("Hello from pci-codebase!")
+"""SAXS and phase-contrast imaging simulation tools."""

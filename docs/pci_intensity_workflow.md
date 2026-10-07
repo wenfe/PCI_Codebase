@@ -10,11 +10,10 @@ the calculation was used in `01_calculate_and_save_data.ipynb`.
 
 For the corresponding SAXS calculation and its Fresnel/Fraunhofer distinction, see the [SAXS intensity workflow](saxs_intensity_workflow.md).
 
-!!! warning "Source availability"
+!!! note "Source location"
 
-    `SAXS_asymmetry/PCI.py` and
-    `SAXS_asymmetry/01_calculate_and_save_data.ipynb` are not present in this
-    checkout. The workflow is retained as a repository-snapshot reference.
+    The implementation lives at `src/SAXS_asymmetry/PCI.py` and the workflow at
+    `notebooks/saxs_asymmetry/01_calculate_and_save_data.ipynb`.
 
 ## Starting point: Rayleigh–Sommerfeld propagation in real space
 

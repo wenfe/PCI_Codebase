@@ -9,11 +9,10 @@ This summary follows the documented `PCI.py` implementation,
 `01_calculate_and_save_data.ipynb` workflow. It complements the
 [PCI intensity workflow](pci_intensity_workflow.md).
 
-!!! warning "Source availability"
+!!! note "Source location"
 
-    `SAXS_asymmetry/PCI.py` and
-    `SAXS_asymmetry/01_calculate_and_save_data.ipynb` are not present in this
-    checkout. The workflow is retained as a repository-snapshot reference.
+    The implementation lives at `src/SAXS_asymmetry/PCI.py` and the workflow at
+    `notebooks/saxs_asymmetry/01_calculate_and_save_data.ipynb`.
 
 ## Starting point: Rayleigh–Sommerfeld propagation in real space
 
@@ -357,7 +356,7 @@ The realistic field contains measured amplitude and assumed phase, not a fully m
 
 ## 8. Output files and quantitative interpretation
 
-The current output base is `SAXS_asymmetry/outputs/sigmaL_4nm_sigmaR_4nm/`, reflecting 4 nm blur at both wire boundaries.
+The current output base is `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/`, reflecting 4 nm blur at both wire boundaries.
 
 | Artifact relative to that base | Contents |
 |---|---|

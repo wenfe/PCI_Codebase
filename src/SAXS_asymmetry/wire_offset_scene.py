@@ -4,12 +4,20 @@ Run through plot_gaussian_wire_offsets.py inside Blender. In interaction scenes,
 Blender (X,Y,Z) means (beam z, transverse x, wire y); one unit is one micrometre.
 """
 import math
+import sys
 from pathlib import Path
 
 import bpy
 from mathutils import Vector
 
-ASSET_DIR = Path(__file__).resolve().parent / "inputs/reference/fig2_schematics"
+if __package__:
+    from .paths import REFERENCE_DIR
+else:
+    if str(Path(__file__).resolve().parent) not in sys.path:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from paths import REFERENCE_DIR  # noqa: E402
+
+ASSET_DIR = REFERENCE_DIR / "fig2_schematics"
 
 INK, MUTED, BLUE, COPPER, GREEN, RULE = (
     "#182c40", "#596b7b", "#266ac2", "#b56835", "#729d40", "#dce4eb")

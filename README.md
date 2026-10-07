@@ -11,14 +11,30 @@ The related [bremsstrahlung denoising code](https://github.com/Helmholtz-AI-Matt
 git submodule update --init --recursive
 ```
 
+## Project layout
+
+```text
+PCI_Codebase/
+├── data/            # Versioned measurement inputs (experimental, profiles, reference)
+├── docs/            # Zensical documentation site sources
+├── notebooks/       # Jupyter pipelines, grouped per study
+├── outputs/         # Generated tables, TIFFs and figures, grouped per study
+├── src/             # Importable Python package (SAXS_asymmetry)
+└── tests/           # Test suite
+```
+
+Code never hard-codes these locations: `SAXS_asymmetry.paths` resolves them from
+the package location. Set `PCI_DATA_DIR` or `PCI_OUTPUT_DIR` to redirect the
+input or artifact trees, for example onto a scratch disk.
+
 ## Quick SAXS left/right sigma comparison
 
-Use [the quick sigma script](SAXS_asymmetry/quick_symmetric_sigma_check.py)
+Use [the quick sigma script](src/SAXS_asymmetry/quick_symmetric_sigma_check.py)
 to manually compare Gaussian 7.11 um SAXS with measured left/right intensities.
 From the repository root, provide one or more ordered sigma pairs in nm:
 
 ```sh
-python SAXS_asymmetry/quick_symmetric_sigma_check.py --sigma-pair 4 8 --sigma-pair 8 4
+python src/SAXS_asymmetry/quick_symmetric_sigma_check.py --sigma-pair 4 8 --sigma-pair 8 4
 ```
 
 The inexpensive 1-D reduction preserves the full simulation's normalized
@@ -36,14 +52,14 @@ command creates a two-panel comparison:
   recalculated from the measured halves; these experimental references can differ.
 
 Experimental inputs must exist under
-[the Erik input directory](SAXS_asymmetry/inputs/experimental/Erik):
+[the Erik input directory](data/experimental/Erik):
 `left_exp.npy`, `right_exp.npy`, `motor_positions_um.npy`, and (for plots)
 `left_div_left_right_exp.npy`. The motor positions are already converted to
 target offsets in um and are used directly in saved order. This is a visual
 comparison tool, not an automatic fit; it applies no fitted scale or position
 shift.
 
-Outputs default to `SAXS_asymmetry/outputs/quick_symmetric_sigma`:
+Outputs default to `outputs/saxs_asymmetry/quick_symmetric_sigma`:
 
 - `sigmaL4_sigmaR8_pairs_7p11um.png`: intensity and fraction comparisons for
   `--sigma-pair 4 8`. Multiple pairs are included in order, for example
@@ -60,20 +76,15 @@ available using `--sigmas 0 3 4 6 8 14` (also the no-argument default).
 `--sigmas` and `--sigma-pair` are mutually exclusive. Use `--sigma-pair 4 4`
 for a symmetric case in the new intensity comparison.
 
-Run the [focused regression tests](SAXS_asymmetry/test_quick_symmetric_sigma_check.py):
+Run the [test suite](tests):
 
 ```sh
-python -m unittest SAXS_asymmetry.test_quick_symmetric_sigma_check
+uv run python -m unittest discover -s tests
 ```
-
-The tests check shifted-mask integrals and consistency between both panels and
-exported tables. The full 2-D comparison test additionally checks the retained
-unshifted signals against local saved `(4, 4)` and `(4, 8)` simulation tables when
-available; it reports a skip if they have not been generated.
 
 ## Position-matched detector images
 
-The [calculation notebook](SAXS_asymmetry/01_calculate_and_save_data.ipynb)
+The [calculation notebook](notebooks/saxs_asymmetry/01_calculate_and_save_data.ipynb)
 includes a "Position-matched experimental and realistic-beam detector images"
 section. Run its shared setup cell and then this section; the full offset scans
 are not required. Configure the experimental input directory, motor-zero
@@ -93,7 +104,7 @@ recalculates only the selected positions and saves a
 compressed bundle of raw images, source filenames, positions, q coordinates,
 and simulation settings under the selected sigma output directory.
 
-In the [plotting notebook](SAXS_asymmetry/02_plot_and_save_figures.ipynb), run the
+In the [plotting notebook](notebooks/saxs_asymmetry/02_plot_and_save_figures.ipynb), run the
 global setup and the matching section to save a comparison figure and individual
 simulated detector PNGs. Experimental and simulated panels have identical q-axis
 limits using [explicit image extents](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.imshow.html),

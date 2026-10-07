@@ -5,12 +5,12 @@ with inexpensive one-dimensional FFTs and overlays Erik's measured motor scan.
 
 Run from the repository root with::
 
-    python SAXS_asymmetry/quick_symmetric_sigma_check.py
+    python src/SAXS_asymmetry/quick_symmetric_sigma_check.py
 
 By default it compares sigma = 0, 3, 4, 6, 8, and 14 nm for the
 7.11 um beam case with a +0.005 nm^-1 Mark1300 q-mask shift. The scan uses
 0.48 um wire-offset spacing from -10.0 through +10.16 um. Results are written to
-``SAXS_asymmetry/outputs/quick_symmetric_sigma``.
+``outputs/saxs_asymmetry/quick_symmetric_sigma``.
 Fraction plots and wire-thickness plots are saved as separate figures with
 consistent rainbow sigma colors. Separate 8-by-6-inch wire-thickness figures
 zoom onto the left and right edges and use the filename suffixes
@@ -45,10 +45,14 @@ from scipy.ndimage import gaussian_filter1d, shift as nd_shift
 
 
 SAXS_DIR = Path(__file__).resolve().parent
-if str(SAXS_DIR) not in sys.path:
-    sys.path.insert(0, str(SAXS_DIR))
-
-import PCI  # noqa: E402  (PCI.py lives beside this script)
+if __package__:
+    from . import PCI
+    from .paths import EXPERIMENTAL_DIR, OUTPUTS_DIR
+else:
+    if str(SAXS_DIR) not in sys.path:
+        sys.path.insert(0, str(SAXS_DIR))
+    import PCI  # noqa: E402  (PCI.py lives beside this script)
+    from paths import EXPERIMENTAL_DIR, OUTPUTS_DIR  # noqa: E402
 
 
 GRID_SIZE = 4096
@@ -67,8 +71,8 @@ OFFSET_STEP_UM = 0.48
 OFFSET_MIN_UM = -10.0
 OFFSET_MAX_UM = 10.16
 
-DEFAULT_OUTPUT_DIR = SAXS_DIR / "outputs" / "quick_symmetric_sigma"
-ERIK_DIR = SAXS_DIR / "inputs" / "experimental" / "Erik"
+DEFAULT_OUTPUT_DIR = OUTPUTS_DIR / "quick_symmetric_sigma"
+ERIK_DIR = EXPERIMENTAL_DIR / "Erik"
 MARK1300_BEAM_CASES = {
     "7p11um": 7.11,
 }
@@ -347,12 +351,7 @@ def mark1300_saxs_scan(
 
 def validate_mark1300_reduction() -> None:
     """Compare the shifted-mask 1-D reduction with saved full 2-D data."""
-    table_dir = (
-        SAXS_DIR
-        / "outputs"
-        / "sigmaL_4nm_sigmaR_8nm"
-        / "clean_pci"
-    )
+    table_dir = OUTPUTS_DIR / "sigmaL_4nm_sigmaR_8nm" / "clean_pci"
     validation_cases = {
         6.0: table_dir / "mark1300_6p0um_shifted_q_mask_left_fraction.dat",
         7.11: table_dir / "mark1300_7p11um_shifted_q_mask_left_fraction.dat",

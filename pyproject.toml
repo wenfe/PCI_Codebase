@@ -1,20 +1,30 @@
 [project]
 name = "pci-codebase"
 version = "0.1.0"
-description = "Add your description here"
+description = "Wave-propagation models and workflows for SAXS and phase-contrast imaging"
 readme = "README.md"
 authors = [
     { name = "Feng, Wen", email = "vivian.fengwen@gmail.com" }
 ]
 requires-python = ">=3.14"
-dependencies = []
-
-[project.scripts]
-pci-codebase = "pci_codebase:main"
+dependencies = [
+    "ipython",
+    "matplotlib",
+    "numpy",
+    "pillow",
+    "scipy",
+    "tqdm",
+]
 
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]
 build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "SAXS_asymmetry"
+source-exclude = [
+    "src/SAXS_asymmetry/*.ps1",
+]
 
 [dependency-groups]
 dev = [

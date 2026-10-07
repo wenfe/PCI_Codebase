@@ -4,6 +4,7 @@ __pycache__/
 .venv/
 .uv-cache/
 /site/
+/dist/
 
 # Local previews, scratch scripts, downloaded runtimes, and session logs
 /tmp/
@@ -13,9 +14,8 @@ __pycache__/
 # Jupyter temporary files
 .ipynb_checkpoints/
 
-# Generated simulation caches and outputs
-SAXS_asymmetry/cache/
-SAXS_asymmetry/outputs/
+# Generated simulation caches
+/src/SAXS_asymmetry/cache/
 
 # Imported workflows whose applications, scripts, or test harnesses are absent.
 # Keep the project-specific sync-gitlab.yml workflow versioned.

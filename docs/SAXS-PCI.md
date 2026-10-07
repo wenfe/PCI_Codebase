@@ -11,12 +11,10 @@ icon: lucide/waves
 > the [SAXS intensity workflow](saxs_intensity_workflow.md) and
 > [PCI intensity workflow](pci_intensity_workflow.md).
 
-!!! warning "Source availability"
+!!! info "Source location"
 
-    The `SAXS_asymmetry/PCI.py` implementation referenced by these notes is not
-    present in this checkout. This page preserves the unified physical model,
-    while the workflow pages identify which implementation-specific statements
-    can be verified from the available repository snapshot.
+    The `PCI.py` implementation referenced by these notes is available at
+    `src/SAXS_asymmetry/PCI.py`.
 
 ## Overview
 
@@ -334,9 +332,8 @@ Gaussian source
     -> detector intensity |E|^2
 ```
 
-The documented main implementation is `SAXS_asymmetry/PCI.py`, which is not
-present in this checkout. The two propagation paths and their numerical
-settings are documented in:
+The main implementation is `src/SAXS_asymmetry/PCI.py`. The two propagation
+paths and their numerical settings are documented in:
 
 - [SAXS intensity workflow](saxs_intensity_workflow.md)
 - [PCI intensity workflow](pci_intensity_workflow.md)

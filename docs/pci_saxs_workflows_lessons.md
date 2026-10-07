@@ -17,11 +17,12 @@ Prepared from the active unified notebooks, generated artifacts, implementation 
 
 **Repository snapshot:** 3 September 2026
 
-!!! warning "Snapshot sources and figures"
+!!! note "Figure provenance"
 
-    The `SAXS_asymmetry` sources and generated figures cited by this guide are
-    not present in the current checkout. Their paths are retained as provenance,
-    but unavailable images are not embedded as broken site assets.
+    The `SAXS_asymmetry` sources cited by this guide live under
+    `src/SAXS_asymmetry/` and `notebooks/saxs_asymmetry/`. Generated figures are
+    written under `outputs/saxs_asymmetry/` and are referenced by path rather
+    than embedded, so the site never links a missing asset.
 
 ---
 
@@ -154,7 +155,7 @@ The factor one-half belongs to **field-amplitude** attenuation. Squaring the fie
 The calculation notebook is the source of truth for physical and numerical
 controls. The plotting notebook must use the same sigma selection and validates
 it against the saved calculation manifest. The active production result set is
-`outputs/sigmaL_4nm_sigmaR_4nm/`.
+`outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/`.
 
 #### Primary model and reduction controls
 
@@ -224,7 +225,7 @@ corresponding stored TIFF.
 
 ### Quick symmetric-sigma reference sweep
 
-`SAXS_asymmetry/quick_symmetric_sigma_check.py` is a deliberately separate
+`src/SAXS_asymmetry/quick_symmetric_sigma_check.py` is a deliberately separate
 sensitivity runner for
 
 ```text
@@ -247,7 +248,7 @@ earlier 6.0 and 7.0 µm table files may remain in the output directory.
 
 !!! note "Figure unavailable"
 
-    `SAXS_asymmetry/outputs/quick_symmetric_sigma/mark1300_symmetric_sigma.png`
+    `outputs/saxs_asymmetry/quick_symmetric_sigma/mark1300_symmetric_sigma.png`
     is not included in this checkout.
 
 
@@ -287,7 +288,7 @@ Notebook 01 creates four cases: divergent and large-root beams at 6.0 and 7.11 �
 
 !!! note "Figure unavailable"
 
-    `SAXS_asymmetry/outputs/saxs/figures/SAXS_Mark1300_collimated_6um_7p11um.png`
+    `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/saxs/figures/SAXS_Mark1300_collimated_6um_7p11um.png`
     is not included in this checkout.
 
 **Figure 1. Clean SAXS comparison.** At fixed material and propagation, changing the Gaussian root changes wavefront curvature. The left fraction remains an S-shaped offset calibration, while detailed left/right amplitudes and saturation shift slightly.
@@ -315,7 +316,7 @@ Notebook 01 creates four cases: divergent and large-root beams at 6.0 and 7.11 �
 
 !!! note "Figure unavailable"
 
-    `SAXS_asymmetry/outputs/methods/figures/05_divergence_scan.png` is not
+    `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/methods/figures/05_divergence_scan.png` is not
     included in this checkout.
 
 **Figure 2. Existing divergence-scan figure.** Wider/less-divergent cases have a broader transition than the dense 7.11 µm baseline. The stored table now also contains a 6.0 µm case, so this figure is older than the current table.
@@ -331,7 +332,7 @@ Notebook 01 creates four cases: divergent and large-root beams at 6.0 and 7.11 �
 
 !!! note "Figure unavailable"
 
-    `SAXS_asymmetry/outputs/clean_pci/clean_pci_field_overview_6um.png` is not
+    `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/clean_pci/clean_pci_field_overview_6um.png` is not
     included in this checkout.
 
 **Figure 3.** The 6.0 µm clean PCI chain: incident beam, wire thickness, target-exit attenuation, and propagated detector fringes. The last panel is the physical manifestation of phase-to-intensity conversion.
@@ -358,7 +359,7 @@ The unshifted Mark1300 reduction rejects \|q\| < 0.10 nm⁻¹. With `q_shift = +
 
 !!! note "Figure unavailable"
 
-    `SAXS_asymmetry/outputs/clean_pci/clean_pci_saxs_mark1300_left_right_vs_offset.png`
+    `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/clean_pci/clean_pci_saxs_mark1300_left_right_vs_offset.png`
     is not included in this checkout.
 
 **Figure 4. Updated three-panel summary.** Top: target-exit PCI transmission and experimental transmission. Middle: far-field SAXS side signals. Bottom: shifted-q asymmetry, including independent 6.0 µm two-row and 10-row curves.
@@ -380,7 +381,7 @@ The measured profile branch reads `RealisticProfile_10nm.tif`, clips invalid/neg
 
 !!! note "Figure unavailable"
 
-    `SAXS_asymmetry/outputs/realistic_profile/figures/01_realistic_vs_gaussian_profile.png`
+    `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/realistic_profile/figures/01_realistic_vs_gaussian_profile.png`
     is not included in this checkout.
 
 **Figure 5.** The measured profile is structured and slightly asymmetric relative to the nominal Gaussian. This changes beam–wire overlap and therefore both exit transmission and SAXS asymmetry.
@@ -412,7 +413,7 @@ The active comparison reuses divergent 7.11 µm SAXS TIFFs and calculates distin
 
 !!! note "Figure unavailable"
 
-    `SAXS_asymmetry/outputs/experimental_comparison/figures/04_exit_transmission.png`
+    `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/experimental_comparison/figures/04_exit_transmission.png`
     is not included in this checkout.
 
 **Figure 6.** Simulated target-exit transmission versus the experimental scan. Shape agreement is meaningful; absolute-flux agreement is not tested because each curve is normalized independently.
@@ -568,11 +569,11 @@ The active comparison reuses divergent 7.11 µm SAXS TIFFs and calculates distin
 
 | Source | Role |
 |---|---|
-| `SAXS_asymmetry/01_calculate_and_save_data.ipynb` | Active calculation and artifact pipeline. |
-| `SAXS_asymmetry/02_plot_and_save_figures.ipynb` | Active read-only plotting pipeline. |
-| `SAXS_asymmetry/quick_symmetric_sigma_check.py` | Standalone 0/3/3.8/4/6/8/14 nm symmetric-sigma Mark1300 sensitivity runner for 7.11 µm with 0.48 µm offset spacing, Erik motor-scan overlay, and both wire-edge thickness zooms. |
-| `SAXS_asymmetry/PCI.py` | Reference NumPy/SciPy wave-propagation implementation. |
-| `SAXS_asymmetry/PCI_torch.py` | Experimental PyTorch port. |
+| `notebooks/saxs_asymmetry/01_calculate_and_save_data.ipynb` | Active calculation and artifact pipeline. |
+| `notebooks/saxs_asymmetry/02_plot_and_save_figures.ipynb` | Active read-only plotting pipeline. |
+| `src/SAXS_asymmetry/quick_symmetric_sigma_check.py` | Standalone 0/3/3.8/4/6/8/14 nm symmetric-sigma Mark1300 sensitivity runner for 7.11 µm with 0.48 µm offset spacing, Erik motor-scan overlay, and both wire-edge thickness zooms. |
+| `src/SAXS_asymmetry/PCI.py` | Reference NumPy/SciPy wave-propagation implementation. |
+| `src/SAXS_asymmetry/PCI_torch.py` | Experimental PyTorch port. |
 | `docs/SAXS-PCI.md` | Unified physical interpretation. |
 | `docs/propagators.md` | Propagation equations and intended implementation behavior. |
 | `docs/saxs_intensity_workflow.md` | Detailed SAXS workflow and propagation notes. |
@@ -584,12 +585,12 @@ The active comparison reuses divergent 7.11 µm SAXS TIFFs and calculates distin
 
 | Artifact family | Location |
 |---|---|
-| Clean SAXS tables/TIFFs | `SAXS_asymmetry/outputs/saxs/` |
-| Methods tables/figures/movie | `SAXS_asymmetry/outputs/methods/` |
-| Clean PCI fields/tables/figures | `SAXS_asymmetry/outputs/clean_pci/` and `outputs/combined_plot_data/` |
-| Symmetric-sigma sensitivity tables/figures | `SAXS_asymmetry/outputs/quick_symmetric_sigma/` |
-| Realistic-profile results | `SAXS_asymmetry/outputs/realistic_profile/` |
-| Experimental comparison | `SAXS_asymmetry/outputs/experimental_comparison/` |
+| Clean SAXS tables/TIFFs | `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/saxs/` |
+| Methods tables/figures/movie | `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/methods/` |
+| Clean PCI fields/tables/figures | `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/clean_pci/` and `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/combined_plot_data/` |
+| Symmetric-sigma sensitivity tables/figures | `outputs/saxs_asymmetry/quick_symmetric_sigma/` |
+| Realistic-profile results | `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/realistic_profile/` |
+| Experimental comparison | `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/experimental_comparison/` |
 
 ---
 

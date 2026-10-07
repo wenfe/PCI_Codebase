@@ -1,7 +1,7 @@
 """Build and render the Gaussian-wire figure with Blender Cycles.
 
 Run with Blender, whose bundled scripting API builds the native 3D scenes:
-  blender --background --factory-startup --python-exit-code 1 --python SAXS_asymmetry/plot_gaussian_wire_offsets.py -- --offsets -5 0 5
+  blender --background --factory-startup --python-exit-code 1 --python src/SAXS_asymmetry/plot_gaussian_wire_offsets.py -- --offsets -5 0 5
 
 The notebook is parsed for numeric configuration only; no cells are executed.
 """
@@ -23,19 +23,30 @@ except ImportError:
 import numpy as np
 
 SAXS_DIR = Path(__file__).resolve().parent
-NOTEBOOK = SAXS_DIR / "01_calculate_and_save_data.ipynb"
+if __package__:
+    from .paths import NOTEBOOKS_DIR, OUTPUTS_DIR
+else:
+    if str(SAXS_DIR) not in sys.path:
+        sys.path.insert(0, str(SAXS_DIR))
+    from paths import NOTEBOOKS_DIR, OUTPUTS_DIR  # noqa: E402
+
+NOTEBOOK = NOTEBOOKS_DIR / "01_calculate_and_save_data.ipynb"
 FIGURE_WIDTH, FIGURE_HEIGHT = 160, 95
 EXPERIMENTAL_OFFSET_FILES = {
     -5: "p3129_r0484_22.855.tiff",
     0: "p3129_r0484_22.862.tiff",
     5: "p3129_r0484_22.869.tiff",
 }
-if str(SAXS_DIR) not in sys.path:
-    sys.path.insert(0, str(SAXS_DIR))
-from wire_offset_scene import (
-    INK, MUTED, BLUE, COPPER, RULE, BEAM, BEAM_STYLE, APPARATUS_STYLE, camera, draw_interaction_3d, draw_setup_3d,
-    image_plane, line, material, new_scene, render, text,
-)
+if __package__:
+    from .wire_offset_scene import (
+        INK, MUTED, BLUE, COPPER, RULE, BEAM, BEAM_STYLE, APPARATUS_STYLE, camera, draw_interaction_3d, draw_setup_3d,
+        image_plane, line, material, new_scene, render, text,
+    )
+else:
+    from wire_offset_scene import (
+        INK, MUTED, BLUE, COPPER, RULE, BEAM, BEAM_STYLE, APPARATUS_STYLE, camera, draw_interaction_3d, draw_setup_3d,
+        image_plane, line, material, new_scene, render, text,
+    )
 
 def read_notebook_geometry(path=NOTEBOOK):
     """Read restricted numeric expressions without executing notebook code."""
@@ -266,7 +277,7 @@ def main():
     data = make_plot_data(config, args.offsets, fwhm)
     tag = lambda value: f"{value:g}".replace(".", "p")
     sigma = f"sigmaL_{tag(config['WIRE_SIGMA_LEFT_NM'])}nm_sigmaR_{tag(config['WIRE_SIGMA_RIGHT_NM'])}nm"
-    output = (args.output_dir or SAXS_DIR/"outputs"/sigma/"schematics"/"blender").resolve()
+    output = (args.output_dir or OUTPUTS_DIR/sigma/"schematics"/"blender").resolve()
     output.mkdir(parents=True, exist_ok=True)
     # Reset only after all configuration has been validated. Run in a fresh process.
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -340,5 +351,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 

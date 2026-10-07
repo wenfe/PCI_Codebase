@@ -10,7 +10,7 @@ param(
     [string]$OutputStem = 'gaussian_wire_offsets_blender'
 )
 $ErrorActionPreference = 'Stop'
-$repoRoot = Split-Path -Parent $PSScriptRoot
+$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 if (-not $BlenderPath) {
     $foundBlender = Get-Command blender -ErrorAction SilentlyContinue
     if ($foundBlender) { $BlenderPath = $foundBlender.Source }

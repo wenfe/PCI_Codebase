@@ -9,8 +9,8 @@ import numpy as np
 from mathutils import Vector
 from bpy_extras.object_utils import world_to_camera_view
 
-root = Path.cwd()
-sys.path.insert(0, str(root / "SAXS_asymmetry"))
+root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(root / "src" / "SAXS_asymmetry"))
 import plot_gaussian_wire_offsets as plot
 
 config = plot.read_notebook_geometry()
