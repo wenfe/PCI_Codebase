@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 .venv/
 .uv-cache/
+/site/
 
 # Local previews, scratch scripts, downloaded runtimes, and session logs
 /tmp/

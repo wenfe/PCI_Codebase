@@ -1,6 +1,19 @@
+---
+icon: lucide/activity
+---
+
 # SAXS intensity calculation: workflow, Fresnel propagation, and the Fraunhofer limit
 
-This summary follows [`PCI.py`](../SAXS_asymmetry/PCI.py), [`SAXS-PCI.md`](SAXS-PCI.md), and [`01_calculate_and_save_data.ipynb`](../SAXS_asymmetry/01_calculate_and_save_data.ipynb). It complements the [PCI intensity workflow](pci_intensity_workflow.md).
+This summary follows the documented `PCI.py` implementation,
+[`SAXS-PCI.md`](SAXS-PCI.md), and the former
+`01_calculate_and_save_data.ipynb` workflow. It complements the
+[PCI intensity workflow](pci_intensity_workflow.md).
+
+!!! warning "Source availability"
+
+    `SAXS_asymmetry/PCI.py` and
+    `SAXS_asymmetry/01_calculate_and_save_data.ipynb` are not present in this
+    checkout. The workflow is retained as a repository-snapshot reference.
 
 ## Starting point: Rayleigh–Sommerfeld propagation in real space
 

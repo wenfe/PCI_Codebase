@@ -1,3 +1,7 @@
+---
+icon: lucide/notebook-tabs
+---
+
 # PCI / SAXS
 
 ## Workflow lessons, physical interpretation, and PCI_torch assessment
@@ -12,6 +16,12 @@ Prepared from the active unified notebooks, generated artifacts, implementation 
 **Scope:** SAXS/PCI workflows in `SAXS_asymmetry`. The separate bremsstrahlung-denoising package is outside this physics pipeline.
 
 **Repository snapshot:** 3 September 2026
+
+!!! warning "Snapshot sources and figures"
+
+    The `SAXS_asymmetry` sources and generated figures cited by this guide are
+    not present in the current checkout. Their paths are retained as provenance,
+    but unavailable images are not embedded as broken site assets.
 
 ---
 
@@ -235,7 +245,10 @@ Both figures use matching rainbow colors and legend labels for every sigma.
 Current tables and summaries cover the 7.11 µm case;
 earlier 6.0 and 7.0 µm table files may remain in the output directory.
 
-![Quick symmetric-sigma Mark1300 sweep](../SAXS_asymmetry/outputs/quick_symmetric_sigma/mark1300_symmetric_sigma.png)
+!!! note "Figure unavailable"
+
+    `SAXS_asymmetry/outputs/quick_symmetric_sigma/mark1300_symmetric_sigma.png`
+    is not included in this checkout.
 
 
 ---
@@ -272,7 +285,10 @@ For the current 4096 × 4096 grid, a `complex64` field is about 128 MiB and a `c
 
 Notebook 01 creates four cases: divergent and large-root beams at 6.0 and 7.11 µm target FWHM. Each case scans the same shifted 10 µm Cu wire, propagates 1.31 m, saves float32 detector TIFFs, and reduces two central rows outside the Mark1300 central q mask.
 
-![Clean SAXS comparison](../SAXS_asymmetry/outputs/saxs/figures/SAXS_Mark1300_collimated_6um_7p11um.png)
+!!! note "Figure unavailable"
+
+    `SAXS_asymmetry/outputs/saxs/figures/SAXS_Mark1300_collimated_6um_7p11um.png`
+    is not included in this checkout.
 
 **Figure 1. Clean SAXS comparison.** At fixed material and propagation, changing the Gaussian root changes wavefront curvature. The left fraction remains an S-shaped offset calibration, while detailed left/right amplitudes and saturation shift slightly.
 
@@ -297,7 +313,10 @@ Notebook 01 creates four cases: divergent and large-root beams at 6.0 and 7.11 �
 | Divergence scan | 7.11 µm baseline plus 6, 9, 12 µm divergent and 12 µm large-root cases | Separate spot-size/curvature effects on calibration slope. |
 | Gallery/movie | Target-exit PCI beside far-field SAXS for each wire offset | Verify that spatial motion and left/right response are physically consistent. |
 
-![Divergence scan](../SAXS_asymmetry/outputs/methods/figures/05_divergence_scan.png)
+!!! note "Figure unavailable"
+
+    `SAXS_asymmetry/outputs/methods/figures/05_divergence_scan.png` is not
+    included in this checkout.
 
 **Figure 2. Existing divergence-scan figure.** Wider/less-divergent cases have a broader transition than the dense 7.11 µm baseline. The stored table now also contains a 6.0 µm case, so this figure is older than the current table.
 
@@ -310,7 +329,10 @@ Notebook 01 creates four cases: divergent and large-root beams at 6.0 and 7.11 �
 
 *Separate target-exit attenuation from detector-plane phase contrast*
 
-![Clean PCI field overview, 6 µm](../SAXS_asymmetry/outputs/clean_pci/clean_pci_field_overview_6um.png)
+!!! note "Figure unavailable"
+
+    `SAXS_asymmetry/outputs/clean_pci/clean_pci_field_overview_6um.png` is not
+    included in this checkout.
 
 **Figure 3.** The 6.0 µm clean PCI chain: incident beam, wire thickness, target-exit attenuation, and propagated detector fringes. The last panel is the physical manifestation of phase-to-intensity conversion.
 
@@ -334,7 +356,10 @@ The unshifted Mark1300 reduction rejects \|q\| < 0.10 nm⁻¹. With `q_shift = +
 
 *What the active 6.0/7.11 µm results say*
 
-![Clean PCI and SAXS Mark1300 summary](../SAXS_asymmetry/outputs/clean_pci/clean_pci_saxs_mark1300_left_right_vs_offset.png)
+!!! note "Figure unavailable"
+
+    `SAXS_asymmetry/outputs/clean_pci/clean_pci_saxs_mark1300_left_right_vs_offset.png`
+    is not included in this checkout.
 
 **Figure 4. Updated three-panel summary.** Top: target-exit PCI transmission and experimental transmission. Middle: far-field SAXS side signals. Bottom: shifted-q asymmetry, including independent 6.0 µm two-row and 10-row curves.
 
@@ -353,7 +378,10 @@ The unshifted Mark1300 reduction rejects \|q\| < 0.10 nm⁻¹. With `q_shift = +
 
 The measured profile branch reads `RealisticProfile_10nm.tif`, clips invalid/negative values, resamples from 10 nm to the 8 nm simulation grid, normalizes total intensity, and uses `sqrt(intensity)` as amplitude. The missing phase is supplied by the divergent 7.11 µm Gaussian curvature.
 
-![Realistic vs Gaussian profile](../SAXS_asymmetry/outputs/realistic_profile/figures/01_realistic_vs_gaussian_profile.png)
+!!! note "Figure unavailable"
+
+    `SAXS_asymmetry/outputs/realistic_profile/figures/01_realistic_vs_gaussian_profile.png`
+    is not included in this checkout.
 
 **Figure 5.** The measured profile is structured and slightly asymmetric relative to the nominal Gaussian. This changes beam–wire overlap and therefore both exit transmission and SAXS asymmetry.
 
@@ -382,7 +410,10 @@ uncertainty is shown as a shaded envelope around the measured response.
 
 The active comparison reuses divergent 7.11 µm SAXS TIFFs and calculates distinct analytic-chord target-exit PCI images. It compares simulated transmission with the r0484 motor scan after independent max normalization. The current analytic transmission minimum is 0.741599 at zero offset and reaches 1 away from the wire.
 
-![Exit transmission versus experiment](../SAXS_asymmetry/outputs/experimental_comparison/figures/04_exit_transmission.png)
+!!! note "Figure unavailable"
+
+    `SAXS_asymmetry/outputs/experimental_comparison/figures/04_exit_transmission.png`
+    is not included in this checkout.
 
 **Figure 6.** Simulated target-exit transmission versus the experimental scan. Shape agreement is meaningful; absolute-flux agreement is not tested because each curve is normalized independently.
 
@@ -544,8 +575,8 @@ The active comparison reuses divergent 7.11 µm SAXS TIFFs and calculates distin
 | `SAXS_asymmetry/PCI_torch.py` | Experimental PyTorch port. |
 | `docs/SAXS-PCI.md` | Unified physical interpretation. |
 | `docs/propagators.md` | Propagation equations and intended implementation behavior. |
-| `docs/saxs_calculation_workflows.md` | Historical and detailed SAXS workflow notes. |
-| `docs/pci_calculation_workflows.md` | Historical and detailed PCI workflow notes. |
+| `docs/saxs_intensity_workflow.md` | Detailed SAXS workflow and propagation notes. |
+| `docs/pci_intensity_workflow.md` | Detailed PCI workflow and physical interpretation. |
 | `SAXS_asymmetry/01_variables_and_functions.md` | Notebook variable/function inventory. |
 | `outputs/combined_plot_data/calculation_manifest.json` | Generated artifact inventory; currently needs refresh for the new 6.0 shifted-q file. |
 
@@ -570,4 +601,6 @@ This is a technical synthesis of the repository snapshot on 3 September 2026. It
 
 ---
 
-*Converted from `output/pdf/pci_saxs_workflows_lessons.pdf` (17 pages). Figures are linked to the generating PNGs under `SAXS_asymmetry/outputs/` rather than re-embedded from the PDF.*
+*Converted from `output/pdf/pci_saxs_workflows_lessons.pdf` (17 pages).
+Original figure paths are retained as provenance, but unavailable PNG files
+are not embedded in this site.*

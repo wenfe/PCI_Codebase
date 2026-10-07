@@ -1,8 +1,20 @@
+---
+icon: lucide/scan-line
+---
+
 # PCI intensity calculation: workflow and physical meaning
 
-This summary follows the current [`PCI.py`](../SAXS_asymmetry/PCI.py), connects it to the wave-optics discussion in [`SAXS-PCI.md`](SAXS-PCI.md), and identifies how the calculation is used in [`01_calculate_and_save_data.ipynb`](../SAXS_asymmetry/01_calculate_and_save_data.ipynb).
+This summary follows the documented `PCI.py` implementation, connects it to
+the wave-optics discussion in [`SAXS-PCI.md`](SAXS-PCI.md), and explains how
+the calculation was used in `01_calculate_and_save_data.ipynb`.
 
 For the corresponding SAXS calculation and its Fresnel/Fraunhofer distinction, see the [SAXS intensity workflow](saxs_intensity_workflow.md).
+
+!!! warning "Source availability"
+
+    `SAXS_asymmetry/PCI.py` and
+    `SAXS_asymmetry/01_calculate_and_save_data.ipynb` are not present in this
+    checkout. The workflow is retained as a repository-snapshot reference.
 
 ## Starting point: Rayleigh–Sommerfeld propagation in real space
 

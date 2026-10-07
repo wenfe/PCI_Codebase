@@ -1,11 +1,22 @@
+---
+icon: lucide/waves
+---
+
 # SAXS and PCI as a unified wave-propagation problem
 
 > This page is a revised Markdown version of the 2021 notes in
 > `SAXS-PCI.docx`. It explains the physical connection between small-angle
 > X-ray scattering (SAXS) and propagation-based phase-contrast imaging (PCI).
 > For details of the current numerical implementation, see
-> [SAXS calculation and comparison](saxs_calculation_comparison.md) and
-> [PCI calculation and comparison](pci_calculation_comparison.md).
+> the [SAXS intensity workflow](saxs_intensity_workflow.md) and
+> [PCI intensity workflow](pci_intensity_workflow.md).
+
+!!! warning "Source availability"
+
+    The `SAXS_asymmetry/PCI.py` implementation referenced by these notes is not
+    present in this checkout. This page preserves the unified physical model,
+    while the workflow pages identify which implementation-specific statements
+    can be verified from the available repository snapshot.
 
 ## Overview
 
@@ -323,11 +334,12 @@ Gaussian source
     -> detector intensity |E|^2
 ```
 
-The main implementation is [`PCI.py`](../SAXS_asymmetry/PCI.py). The two
-propagation paths and their active numerical settings are documented in:
+The documented main implementation is `SAXS_asymmetry/PCI.py`, which is not
+present in this checkout. The two propagation paths and their numerical
+settings are documented in:
 
-- [SAXS calculation and comparison](saxs_calculation_comparison.md)
-- [PCI calculation and comparison](pci_calculation_comparison.md)
+- [SAXS intensity workflow](saxs_intensity_workflow.md)
+- [PCI intensity workflow](pci_intensity_workflow.md)
 - [Propagation methods](propagators.md)
 
 The historical notes state that the ImageJ plugin applied an absolute

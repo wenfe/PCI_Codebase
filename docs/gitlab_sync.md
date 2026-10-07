@@ -1,6 +1,10 @@
+---
+icon: simple/gitlab
+---
+
 # GitHub main to GitLab
 
-The [Sync main to GitLab workflow](../.github/workflows/sync-gitlab.yml) pushes
+The [Sync main to GitLab workflow](https://github.com/wenfe/PCI_Codebase/blob/main/.github/workflows/sync-gitlab.yml) pushes
 GitHub `main` to GitLab `main` whenever a commit is pushed or a pull request is
 merged into GitHub `main`. It can also be run manually on `main`.
 

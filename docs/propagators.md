@@ -1,3 +1,7 @@
+---
+icon: lucide/radio-tower
+---
+
 # HRXP Propagator Math
 
 This document explains the wave-optics propagators implemented in
@@ -5,6 +9,12 @@ This document explains the wave-optics propagators implemented in
 they encode, and how they map onto the source code. All quantities use the
 module unit system: **length in nanometers** (`nm = 1`) and **energy in keV**
 (convenience constants `m`, `um`, `mm`, `cm`, `eV` are provided).
+
+!!! warning "Source availability"
+
+    The referenced `SAXS_asymmetry/PCI.py` implementation is not present in
+    this checkout. This page preserves the documented equations and intended
+    behavior, but implementation-specific claims cannot be verified here.
 
 ## Rayleigh–Sommerfeld: real-space foundation
 
