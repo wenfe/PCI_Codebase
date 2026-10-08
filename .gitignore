@@ -17,6 +17,11 @@ __pycache__/
 # Generated simulation caches
 /src/SAXS_asymmetry/cache/
 
+# Generated simulation outputs (large .npz field dumps and figures).
+# Reproducible from the notebooks; far exceeds GitHub's 100 MB file limit.
+/outputs/
+/src/SAXS_asymmetry/outputs/
+
 # Imported workflows whose applications, scripts, or test harnesses are absent.
 # Keep the project-specific sync-gitlab.yml workflow versioned.
 /.github/workflows/deploy-pages.yml
