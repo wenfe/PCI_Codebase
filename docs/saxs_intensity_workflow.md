@@ -4,15 +4,37 @@ icon: lucide/activity
 
 # SAXS intensity calculation: workflow, Fresnel propagation, and the Fraunhofer limit
 
-This summary follows the documented `PCI.py` implementation,
-[`SAXS-PCI.md`](SAXS-PCI.md), and the former
-`01_calculate_and_save_data.ipynb` workflow. It complements the
+This summary follows the current `src/SAXS_asymmetry/PCI.py` implementation,
+[`SAXS-PCI.md`](SAXS-PCI.md), and the active calculation notebook. It complements the
 [PCI intensity workflow](pci_intensity_workflow.md).
 
 !!! note "Source location"
 
     The implementation lives at `src/SAXS_asymmetry/PCI.py` and the workflow at
     `notebooks/saxs_asymmetry/01_calculate_and_save_data.ipynb`.
+    Figures are produced separately by
+    `notebooks/saxs_asymmetry/02_plot_and_save_figures.ipynb`.
+
+## Repository structure and run contract
+
+The shared `src/SAXS_asymmetry/paths.py` resolver supplies `DATA_DIR`
+(repository `data/`) and `OUTPUTS_DIR` (repository
+`outputs/saxs_asymmetry/`). Set `PCI_DATA_DIR` or `PCI_OUTPUT_DIR` before
+running notebook setup to redirect those roots.
+
+Notebook 01 calculates and saves artifacts; notebook 02 loads them for
+plotting. Both locate the repository through `pyproject.toml` and must be
+started from inside it. Select the same `WIRE_SIGMA_LEFT_NM` and
+`WIRE_SIGMA_RIGHT_NM` in both notebooks. The current 4.67/0 nm selection
+produces the tag `sigmaL_4p67nm_sigmaR_0nm`; this is a configuration, not a
+universal symmetric-wire baseline.
+
+Main results are grouped by sigma tag, with `saxs/`, `methods/`,
+`clean_pci/`, `realistic_profile/`, `experimental_comparison/`, and
+`combined_plot_data/` beneath that selection. Run notebook 01's completion
+cell to write `combined_plot_data/calculation_manifest.json` before notebook
+02's setup. The [documentation overview](index.md#repository-and-execution-layout)
+summarizes the complete directory layout.
 
 ## Starting point: Rayleigh–Sommerfeld propagation in real space
 
@@ -269,7 +291,7 @@ Even if that propagation phase were neglected, the **incident Gaussian phase wou
 $$
 E_{\mathrm{in}}e^{ikr^2/(2Z)}
 \propto e^{-r^2/w_t^2}
-\exp\!\left[\frac{ikr^2}{2}\left(\frac{1}{L}-\frac{1}{R_t}\right)\right].
+\exp\!\left[\frac{ikr^2}{2}\left(\frac{1}{Z}-\frac{1}{R_t}\right)\right].
 $$
 
 Approximating propagation as Fraunhofer does not turn a curved incident field into a plane wave.
@@ -305,10 +327,11 @@ Moving the wire changes which thickness and phase gradients lie under the finite
 
 The clean scan calculates four cases: 6.0 and 7.11 µm target FWHM, each with the small-waist and large-waist roots. Each case uses 43 wire offsets from −10.0 to +10.16 µm in 0.48 µm steps. This grid has no exactly zero offset.
 
-For each case and offset, the notebook saves a float32 detector TIFF and forms a two-row mean:
+For each case and offset, the notebook saves a float32 detector TIFF and forms
+a ten-row mean (`SAXS_LINEOUT_ROWS = 10`):
 
 $$
-P(q_x)=\frac{1}{2}\sum_{j\in\{2047,2048\}}I_D(j,q_x).
+P(q_x)=\frac{1}{10}\sum_{j=2043}^{2052}I_D(j,q_x).
 $$
 
 `mark1300_sides()` excludes the central region using
@@ -321,7 +344,8 @@ right = lineout[2048+h:].sum()
 
 This approximately selects $|q_x|\ge0.10$ nm⁻¹. The mask uses signed horizontal q, not radial $\sqrt{q_x^2+q_y^2}$. Its integer slices are not perfectly mirror-symmetric on the even FFT grid: the nearest included negative bin is −523 times `Q_STEP`, while the nearest positive bin is +522 times `Q_STEP`.
 
-The raw table contains offset in **nm**, left sum $S_L$, and right sum $S_R$. The common fraction
+The raw table contains offset in **nm**, ten-row left sum $S_L$, and ten-row
+right sum $S_R$. The common fraction
 
 $$
 f_L=\frac{S_L}{S_L+S_R}
@@ -331,7 +355,8 @@ is the share of the selected side signal on the left. It is not transmission thr
 
 ### Shifted detector-center masks
 
-For the two small-waist cases, the notebook also calculates two-row and ten-row fractions with the mask center shifted to $q_c=+0.005$ nm⁻¹. It approximately retains
+For the two small-waist cases, the notebook also calculates ten-row fractions
+with the mask center shifted to $q_c=+0.005$ nm⁻¹. It approximately retains
 
 $$
 q_x<-0.095\;\mathrm{nm}^{-1}
@@ -341,32 +366,57 @@ $$
 
 using fractional weights where a bin crosses a mask boundary. This changes the integration windows; it does not shift the incident beam or recompute propagation. A shifted mask can yield a non-half fraction even for a pattern symmetric about zero.
 
+The shifted tables in the selected `clean_pci/` directory contain exactly two
+columns: offset in µm and ten-row $f_L$. Their filenames are
+`mark1300_7p11um_shifted_q_mask_left_fraction.dat` and
+`mark1300_6p0um_shifted_q_mask_left_fraction.dat`.
+Despite that directory name, these are SAXS reductions. Older three-column
+two-row/ten-row files must be regenerated rather than interpreted with the
+current schema.
+
 ### Profiles for plotting and other branches
 
 | Notebook branch | Calculation or reduction |
 |---|---|
-| Clean profile bundle | Two-row means interpolated onto the experimental q axis, divided by each profile's own maximum, then multiplied by 2. These are display-normalized profiles. |
+| Clean profile bundle | Ten-row means interpolated onto the experimental q axis, divided by each profile's own maximum, then multiplied by 2. These are display-normalized profiles. |
 | Methods profiles and gallery | Reuse clean 7.11 µm SAXS results; use ten-row means for the Methods profile comparison. Gallery “PCI” images are sample-exit intensity. |
-| Divergence scan | Recalculate small-root target FWHM 6, 9, and 12 µm and large-root 12 µm cases on 50 offsets; reuse the 7.11 µm clean case on its 43 offsets. |
+| Divergence scan | Recalculate small-root target FWHM 6, 9, and 12 µm and large-root 12 µm cases on the same 43-offset grid; reuse the 7.11 µm clean case. |
 | Realistic illumination | Resample a measured intensity image to the beam grid, normalize its sum to 1, use its square root as amplitude, and supply modeled Gaussian curvature from the 7.11 µm case. Propagate the complex exit field with the same Fresnel function. |
 | Realistic SAXS reduction | Ten-row means, `Q_AXIS < -0.10` and `Q_AXIS > +0.10` masks, and $S_L/(S_L+S_R)$. The saved profile bundle retains raw ten-row curves. |
 | Experimental comparison images | Reuse the clean small-waist 7.11 µm SAXS TIFFs; this is not another diffraction algorithm. |
 
 The realistic field contains measured amplitude and assumed phase, not a fully measured complex wavefront. The current `FORCE_RECALCULATE=True` causes the main clean and realistic computations to run again; existing TIFFs can be reused by the corresponding paths when that flag is false.
 
-## 8. Output files and quantitative interpretation
+### Realistic wire-edge smoothing-pair sweep
 
-The current output base is `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/`, reflecting 4 nm blur at both wire boundaries.
+The dedicated notebook 01 sweep reuses the realistic incident field and
+7.11 µm small-root Gaussian phase model for the ordered sigma pairs
+`(0, 0)`, `(3, 3)`, `(4, 4)`, `(4.67, 0)`, `(6, 8)`, and `(8, 14)` nm.
+It uses the 4096-square, 8 nm grid, 43 offsets at 0.48 µm spacing, ten central
+rows, and the **unshifted** `Q_AXIS < -0.10` / `Q_AXIS > +0.10` masks.
 
-| Artifact relative to that base | Contents |
-|---|---|
-| `saxs/detector_tiffs/Data_8nm/<case>/SAXS_Offset<offset>um.tif` | Two-dimensional detector intensity in simulation units. |
-| `saxs/tables/*SAXS_asymmetry_Mark1300_*.dat` | Offset in nm and raw two-row left/right sums. |
-| `combined_plot_data/clean_saxs_profiles.npz` | Experimental q reference, offsets in µm, and display-normalized profiles. |
-| `clean_pci/mark1300_*_shifted_q_mask_left_fraction.dat` | SAXS fractions with the shifted mask, for two-row and ten-row reductions; these remain SAXS observables despite the directory name. |
-| `realistic_profile/tables/realistic_profile_saxs_left_right.dat` | Realistic-profile offset in nm, raw side sums, and left fraction. |
-| `combined_plot_data/realistic_saxs_lineouts.npz` | q axis, offsets in µm, and raw ten-row profiles. |
+This sweep writes checkpointed pair tables and
+`realistic_7p11um_unshifted_fL_smoothing_pairs.npz` under
+`outputs/saxs_asymmetry/realistic_sigma_pair_scan/`, outside the selected
+sigma tree. Compatible pair tables are reused independently of the main
+`FORCE_RECALCULATE` switch; changing underlying assumptions requires
+invalidating those specific checkpoints.
 
-The source prefactor, missing FFT pixel-area factor, and absence of detector efficiency and pixel-response modeling mean these arrays are not calibrated photon counts or an absolute differential scattering cross section. Side sums also omit a q-bin integration factor. Common multiplicative factors cancel in a fraction formed from one image, but this does not justify absolute comparisons across different source normalizations, grids, or extraction regions.
+Notebook 02 reads the consolidated bundle and overlays the measured motor
+fraction with its ±1 µm horizontal-position uncertainty envelope. The
+standard export is `02_realistic_7p11um_fL_smoothing_pairs.png` and its vector
+PDF counterpart. The figure is sized at 3.4 × 3.4 inches for one column of a
+two-column manuscript, with 8.5 pt axis labels, 7.5 pt ticks, and a 7.6 pt
+single-column legend above the axes. Place it at `\columnwidth`, not full
+two-column width.
 
-The model assumes coherent monochromatic scalar illumination, a projected sample transmission, and paraxial free-space propagation for SAXS. Its retained Fresnel phase is physically relevant; the Gaussian source-sign issue, sample approximation, q-axis conventions, and numerical sampling still need consideration when interpreting quantitative agreement with experiment.
+### Standalone quick-sigma tool
+
+`src/SAXS_asymmetry/quick_symmetric_sigma_check.py` is a separate, separable
+1-D **Gaussian** sensitivity tool, not the realistic-amplitude sweep.
+`--sigmas` selects a symmetric sweep; repeatable `--sigma-pair LEFT RIGHT`
+selects independent edges. Pair mode compares shifted left/right signals
+using one shared `max(left + right)` normalization per scan and plots their
+fraction with the same mask shift (default +0.005 nm⁻¹).
+Its default output directory is `outputs/saxs_asymmetry/quick_symmetric_sigma/`.
+Do not equate its shifted Gaussian curves with the unshifted realistic sweep.

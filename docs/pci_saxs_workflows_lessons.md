@@ -9,20 +9,24 @@ icon: lucide/notebook-tabs
 *A repository-grounded guide for calculation, comparison, validation, and wiki documentation.*
 
 > **CURRENT BASELINE**
-> 8.2 keV | 4096 × 4096 | 8 nm target pixels | 10 µm Cu wire | σL = σR = 4 nm | q-mask shift = +0.005 nm⁻¹ | 6.0 and 7.11 µm Gaussian cases
+> 8.2 keV | 4096 × 4096 | 8 nm target pixels | 10 µm Cu wire | σL = 4.67 nm, σR = 0 nm | ten-row SAXS lineouts | 6.0 and 7.11 µm Gaussian cases
 
 Prepared from the active unified notebooks, generated artifacts, implementation source, and legacy notes.
 
-**Scope:** SAXS/PCI workflows in `SAXS_asymmetry`. The separate bremsstrahlung-denoising package is outside this physics pipeline.
+**Scope:** SAXS/PCI implementation in `src/SAXS_asymmetry/` and workflows in
+`notebooks/saxs_asymmetry/`. The separate bremsstrahlung-denoising package is
+outside this physics pipeline.
 
-**Repository snapshot:** 3 September 2026
+**Structure and workflow review:** 22 October 2026
 
 !!! note "Figure provenance"
 
     The `SAXS_asymmetry` sources cited by this guide live under
     `src/SAXS_asymmetry/` and `notebooks/saxs_asymmetry/`. Generated figures are
     written under `outputs/saxs_asymmetry/` and are referenced by path rather
-    than embedded, so the site never links a missing asset.
+    than embedded. They are generated, normally untracked artifacts and may
+    be absent from a fresh checkout. Old symmetric-sigma results are historical
+    examples, not quantitative predictions for the current 4.67/0 nm selection.
 
 ---
 
@@ -35,12 +39,12 @@ Prepared from the active unified notebooks, generated artifacts, implementation 
 The source creates a complex incident field. The copper wire multiplies it by an amplitude-and-phase transmission. Free-space propagation then redistributes phase into intensity. Target-exit transmission, near-axis PCI, and finite-q SAXS are related outputs of this same complex field, but they are **not** interchangeable measurements.
 
 - Beam FWHM alone does not define illumination: the small and large Gaussian roots can give the same target size with different curvature and therefore different propagated patterns.
-- The active workflow is notebook 01 for calculation and artifact creation, followed by notebook 02 for read-only plotting. This separation is a major reproducibility improvement.
-- The 6.0 µm and 7.11 µm shifted-q reductions must be accumulated independently. The corrected production tables contain 43 finite rows and no longer duplicate one another.
-- Detector-center correction is analysis geometry, not a new physical beam. A +0.005 nm⁻¹ q shift moves the excluded window and changes the centered left fraction from about 0.5 to about 0.542.
-- `PCI.py` is the usable reference engine. `PCI_torch.py` is a promising experimental port for batched/GPU work, but it is not presently importable or parity-validated in this workspace.
+- The active workflow is notebook 01 for calculation and artifact creation, followed by notebook 02 for artifact-consuming plotting without repeated propagation. This separation is a major reproducibility improvement.
+- The 6.0 µm and 7.11 µm shifted-q reductions use independent accumulators. Each current table has 43 rows and two columns: offset in µm and ten-row left fraction.
+- Detector-center correction is analysis geometry, not a new physical beam. The Gaussian shifted-mask branch uses +0.005 nm⁻¹; the realistic smoothing-pair sweep uses an unshifted mask. These reductions are not interchangeable.
+- `PCI.py` is the reference engine used by the notebooks. `PCI_torch.py` is an experimental port with additional dependencies and an external propagator import; it is not a validated drop-in replacement.
 - Comparison quality is controlled as much by axis, mask, row averaging, orientation, and normalization as by the propagation model itself.
-- The standalone symmetric-sigma sweep compares 0, 3, 3.8, 4, 6, 8, and 14 nm for the 7.11 µm beam on a 0.48 µm offset grid without changing the production notebooks. It reports the propagated Mark1300 fraction, overlays Erik's measured motor scan, and shows both wire-edge thickness zooms.
+- The standalone quick tool compares Gaussian symmetric sigmas or independent sigma pairs. The separate notebook sweep compares realistic illumination at six ordered sigma pairs and writes its own consolidated bundle.
 
 ### Recommended reading order
 
@@ -57,7 +61,7 @@ The source creates a complex incident field. The copper wire multiplies it by an
 
 *The stable conceptual architecture behind the notebooks*
 
-```
+```text
 Incident field                Copper wire                  Complex exit field
 Gaussian or measured  ─────►  complex transmission  ─────►  amplitude + phase
                                                                     │
@@ -83,10 +87,41 @@ The calculation pipeline preserves the complete complex field through the target
 | Stage | Primary artifact | Responsibility |
 |---|---|---|
 | 1. Calculate | `01_calculate_and_save_data.ipynb` | Build fields, propagate, reduce, and save tables/TIFF/NPZ artifacts. |
-| 2. Plot | `02_plot_and_save_figures.ipynb` | Load saved artifacts and create figures without repeating propagation. |
+| 2. Plot | `02_plot_and_save_figures.ipynb` | Load saved artifacts and create figures without repeating propagation; plotting is not read-only on disk. |
 | 3. Explain | `docs/*.md` and this guide | Record equations, conventions, limitations, and interpretation. |
-| 4. Reproduce | legacy `SAXS_PCI_Pointing_Div.ipynb`; `PlotSAXS_Pointing_Div.ipynb`; `idealc.ipynb` | Preserve historical conventions without mixing them into the active pipeline. |
+| 4. Reproduce | legacy `SAXS_PCI_Pointing_Div.ipynb` and `PlotSAXS_Pointing_Div.ipynb` | Preserve historical conventions without mixing them into the active pipeline. |
 
+### Directory ownership and run order
+
+| Repository location | Contents |
+|---|---|
+| `src/SAXS_asymmetry/` | NumPy engine, experimental Torch port, path resolver, and standalone utilities. |
+| `data/experimental/` | SAXS profiles, motor-scan arrays, and transmission measurements. |
+| `data/profiles/` | Measured incident-intensity TIFFs. |
+| `data/reference/` | External reference curves. |
+| `notebooks/saxs_asymmetry/` | Active calculation/plotting pair and historical notebooks. |
+| `outputs/saxs_asymmetry/<sigma_tag>/` | Selected-sigma results and calculation manifest. |
+| `outputs/saxs_asymmetry/quick_symmetric_sigma/` | Standalone Gaussian sigma comparisons. |
+| `outputs/saxs_asymmetry/realistic_sigma_pair_scan/` | Checkpointed realistic pair tables, consolidated data, and figures. |
+| `docs/` and `tests/` | Site sources and repository-layout checks. |
+
+`src/SAXS_asymmetry/paths.py` is the path authority. `PCI_DATA_DIR`
+replaces the input root; `PCI_OUTPUT_DIR` replaces the study-output root.
+Set overrides before notebook setup. Notebook setup searches for
+`pyproject.toml`, so start the notebooks from within the repository.
+
+Install the locked environment with `uv sync --locked`. Run notebook 01's
+setup, select the sigma pair, and execute the required dependent sections.
+Run the completion cell to write
+`<sigma_tag>/combined_plot_data/calculation_manifest.json`.
+Then run notebook 02's setup with the same pair and its corresponding plots.
+The current tag is `sigmaL_4p67nm_sigmaR_0nm`.
+
+The smoothing-pair sweep depends on the clean-case configuration and
+realistic-field setup. Its checkpoint tables sit outside the selected sigma
+tree and are reused when shape, offsets, and finite fractions match.
+`FORCE_RECALCULATE` does not invalidate those checkpoints. After changing
+their physical assumptions, invalidate the affected pair tables explicitly.
 
 ---
 
@@ -98,7 +133,7 @@ The calculation pipeline preserves the complete complex field through the target
 
 The material is represented by `n = 1 - δ + iβ`. For projected thickness `t(x,y)`, the field transmission is:
 
-```
+```text
 T_field(x,y) = exp[-µ t(x,y)/2] · exp[-i k δ t(x,y)]
 
 E_exit(x,y)  = E_in(x,y) · T_field(x,y),     with  µ = 2 k β
@@ -137,6 +172,8 @@ The factor one-half belongs to **field-amplitude** attenuation. Squaring the fie
 | Wire projection | 2000 samples at 8 nm | 16 µm target-map field of view; analytic chord sampled at beam resolution. |
 | Bandwidth | 0 eV | All active unified cases are monochromatic. |
 | Central SAXS exclusion | \|q\| < 0.10 nm⁻¹ | Removes the strongest forward region from Mark1300 side sums. |
+| Wire-edge smoothing | Left 4.67 nm, right 0 nm | Selected independently; old symmetric 4/4 nm results are not the current baseline. |
+| SAXS lineout | Ten central rows, indices 2043–2052 | Used by clean scans, Methods, realistic reductions, and shifted-mask fractions. |
 
 ### Gaussian roots used by current cases
 
@@ -153,32 +190,36 @@ The factor one-half belongs to **field-amplitude** attenuation. Squaring the fie
 ### User-controlled parameter summary
 
 The calculation notebook is the source of truth for physical and numerical
-controls. The plotting notebook must use the same sigma selection and validates
-it against the saved calculation manifest. The active production result set is
-`outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/`.
+controls. The plotting notebook must use the same sigma selection and loads
+the selected tree's calculation manifest. Loading the manifest is not a
+complete cache-compatibility check. The current result tree is
+`outputs/saxs_asymmetry/sigmaL_4p67nm_sigmaR_0nm/`.
 
 #### Primary model and reduction controls
 
 | Parameter | Active value | Meaning and scope |
 |---|---:|---|
-| Left wire-edge blur, `WIRE_SIGMA_LEFT_NM` | 4 nm | Gaussian smoothing applied to the negative-coordinate wire boundary. |
-| Right wire-edge blur, `WIRE_SIGMA_RIGHT_NM` | 4 nm | Gaussian smoothing applied to the positive-coordinate wire boundary. The active model is therefore symmetric. |
+| Left wire-edge blur, `WIRE_SIGMA_LEFT_NM` | 4.67 nm | Gaussian smoothing applied to the negative-coordinate wire boundary. |
+| Right wire-edge blur, `WIRE_SIGMA_RIGHT_NM` | 0 nm | Positive-coordinate wire boundary is unblurred. The selected model is asymmetric. |
 | Shifted Mark1300 mask, `Q_MASK_SHIFT_NM_INV` | +0.005 nm⁻¹ | Moves the excluded q interval from approximately [−0.100, +0.100] to [−0.095, +0.105] nm⁻¹. This shifts the mask, not the simulated q data. |
 | Mark1300 cutoff, `MARK1300_Q_MIN` | 0.10 nm⁻¹ | Excludes the intense central region from left/right SAXS sums. |
 | Profile comparison limit, `Q_COMPARE_MAX` | 0.30 nm⁻¹ | Upper bound used for profile normalization and comparison plots; it does not change propagation. |
-| Central rows | 2 and 10 | Two rows are the main Mark1300 reduction; 10 rows provide the pointing and shifted-mask comparison. |
+| Central rows | 10 | Shared clean, Methods, realistic, pointing, and shifted-mask SAXS extraction. |
 | Gaussian geometry | Divergent and quasi-collimated | Selects the small or large source-waist root for a requested target FWHM. |
 
-The 4 nm edge sigma is a wire-boundary blur, not the Gaussian beam sigma and
-not the beam FWHM. At the active 8 nm target sampling it equals 0.5 target
-pixel. It is applied consistently to the projected-wire calculation, clean PCI
+The left 4.67 nm edge sigma is a wire-boundary blur, not the Gaussian beam
+sigma and not the beam FWHM. At 8 nm target sampling it is approximately
+0.584 target pixel; the right sigma is zero. The selected pair is applied
+to the projected-wire calculation, clean PCI
 scan, realistic-profile target interaction, and analytic-chord comparison.
 Experimental measurements and imported reference curves are not modified by
 this sigma.
 
-The shifted-q reduction is calculated only for the divergent Mark1300 7.11 µm
-and 6.0 µm cases. The shift is about 26 q-grid samples, while the 0.10 nm⁻¹
-central half-width is about 522 samples.
+During the clean pass, shifted-q tables are calculated for the small-root
+7.11 µm and 6.0 µm cases. Notebook 02 also applies the shifted mask to saved
+realistic lineouts for selected comparison panels. The dedicated realistic
+smoothing-pair sweep remains unshifted. The +0.005 nm⁻¹ shift is about
+26 q-grid samples; the 0.10 nm⁻¹ central half-width is about 522 samples.
 
 #### Beam-size controls
 
@@ -201,7 +242,7 @@ the selected divergent/collimated root; it is not an independent input.
 |---|---|
 | Clean SAXS, Methods data, and realistic profile | 43 offsets on a 0.48 µm grid from −10.0 through +10.16 µm. |
 | Clean PCI | 50 evenly spaced offsets from −10 to +10 µm. |
-| Divergence study | 50 evenly spaced offsets from −10 to +10 µm. |
+| Divergence study | Same 43-offset 0.48 µm grid as Clean SAXS. |
 | Analytic transmission | 49 evenly spaced offsets from −10 to +10 µm. |
 | Experimental PCI/SAXS image comparison | 43 matched offsets from −10.0 through +10.16 µm at 0.48 µm spacing, using the exact Clean SAXS grid. |
 | Methods GIF | 43 frames from −10.0 through +10.16 µm at 0.48 µm spacing, using every generated Methods offset. |
@@ -210,26 +251,26 @@ the selected divergent/collimated root; it is not an independent input.
 
 The active workflow introduces or changes the following controls:
 
-- independent left/right wire-edge sigmas, currently set to the symmetric 4/4 nm model;
+- independent left/right wire-edge sigmas, currently set to the asymmetric 4.67/0 nm model;
 - sigma-tagged output trees so different sigma pairs remain isolated;
 - all active 7.1 µm cases conformed to 7.11 µm, plus the 6.0 µm SAXS/PCI case;
-- the divergence comparison to include 6, 9, and 12 µm, with its offset count increased from 11 to 50;
+- the divergence comparison to include 6, 9, and 12 µm on the common 43-offset grid;
 - projected-wire voxel size from 20 to 8 nm;
 - clean SAXS offset spacing from 0.5 to 0.48 µm; and
 - `FORCE_RECALCULATE` from false to true for the current production run.
 
 The +0.005 nm⁻¹ q-mask shift remains an explicit control but was already
 present in the earlier workflow. The experimental-comparison gallery and GIF
-now consume the exact 0.48 µm Clean SAXS grid so every requested plot has a
+consume the exact 0.48 µm Clean SAXS grid so every requested plot has a
 corresponding stored TIFF.
 
-### Quick symmetric-sigma reference sweep
+### Standalone Gaussian sigma comparisons
 
-`src/SAXS_asymmetry/quick_symmetric_sigma_check.py` is a deliberately separate
-sensitivity runner for
+`src/SAXS_asymmetry/quick_symmetric_sigma_check.py` is a separate sensitivity
+runner. Its default symmetric sweep is
 
 ```text
-sigma_left = sigma_right = 0, 3, 3.8, 4, 6, 8, or 14 nm.
+sigma_left = sigma_right = 0, 3, 4, 6, 8, or 14 nm.
 ```
 
 It produces the Mark1300 observable for the 7.11 µm divergent beam.
@@ -237,19 +278,44 @@ The sweep uses 43 offsets from −10.0 through +10.16 µm at 0.48 µm spacing:
 
 | Observable | Fast-path method | Main finding |
 |---|---|---|
-| Divergent Mark1300 fraction | Separable 1-D complex field and 4096-point Fresnel FFT with the +0.005 nm⁻¹ shifted q mask; overlay Erik's measured motor offsets and left fractions | Sigma strongly changes the offset response; the maximum change from sigma 8 nm is about 0.213 for sigma 0 nm, 0.196 for sigma 3 nm, 0.155 for sigma 3.8 nm, and 0.120 for sigma 14 nm. The motor points provide an experimental reference on the 7.11 µm panel. |
+| Small-root Gaussian Mark1300 fraction | Separable 1-D complex field and 4096-point Fresnel FFT with a shifted, fractional-bin q mask; overlay the measured motor fraction | Compare response shapes only with matching sigma, q shift, and normalization. Older numerical sweep summaries are not current-baseline predictions. |
 
 The fraction plot is saved separately from two standalone 8 × 6 inch wire-edge
 thickness figures: the left edge (−5.04 to −4.99 µm) uses the `_wire_left_edge`
 filename suffix, and the right edge (4.99 to 5.04 µm) uses `_wire_right_edge`.
 Both figures use matching rainbow colors and legend labels for every sigma.
-Current tables and summaries cover the 7.11 µm case;
-earlier 6.0 and 7.0 µm table files may remain in the output directory.
+Repeatable `--sigma-pair LEFT RIGHT` arguments instead select independent
+edges. Pair mode writes normalized left/right intensities and their fraction,
+using the same mask shift in both panels. Each scan shares one
+`max(left + right)` denominator, rather than normalizing halves independently.
+The measured fraction is loaded separately from the measured halves.
+`--sigmas` and `--sigma-pair` are mutually exclusive.
 
-!!! note "Figure unavailable"
+The default output directory is
+`outputs/saxs_asymmetry/quick_symmetric_sigma/`; `--output-dir` isolates trials,
+and `--no-plot` writes tables only. Old files in that directory do not establish
+the parameters of a new run.
 
-    `outputs/saxs_asymmetry/quick_symmetric_sigma/mark1300_symmetric_sigma.png`
-    is not included in this checkout.
+### Realistic smoothing-pair sweep
+
+Notebook 01 also compares `(0, 0)`, `(3, 3)`, `(4, 4)`, `(4.67, 0)`,
+`(6, 8)`, and `(8, 14)` nm using measured incident amplitude and the 7.11 µm
+small-root Gaussian phase model. This is a full realistic-field calculation,
+not the separable Gaussian CLI reduction.
+
+It saves two-column offset/fraction checkpoints and
+`realistic_7p11um_unshifted_fL_smoothing_pairs.npz` under
+`outputs/saxs_asymmetry/realistic_sigma_pair_scan/`. Bundle metadata records
+sigma pairs, grid, pixel size, offset step, q cutoff and shift, phase FWHM,
+and lineout row count. Its mask is unshifted and uses signed horizontal q.
+
+Notebook 02 overlays measured motor fractions and a ±1 µm horizontal-position
+uncertainty envelope. It saves
+`02_realistic_7p11um_fL_smoothing_pairs.png` and a vector PDF. The current
+3.4 × 3.4 inch layout fits one manuscript column with a single-column legend
+above the axes. Keep the 8.5/7.5/7.6 pt label/tick/legend typography readable
+at `\columnwidth`; do not treat a renamed manuscript copy as a separate
+simulation result.
 
 
 ---
@@ -284,21 +350,23 @@ For the current 4096 × 4096 grid, a `complex64` field is about 128 MiB and a `c
 
 *Controlled comparison of beam size and curvature*
 
-Notebook 01 creates four cases: divergent and large-root beams at 6.0 and 7.11 µm target FWHM. Each case scans the same shifted 10 µm Cu wire, propagates 1.31 m, saves float32 detector TIFFs, and reduces two central rows outside the Mark1300 central q mask.
+Notebook 01 creates four cases: small-root and large-root beams at 6.0 and
+7.11 µm target FWHM. Each scans the selected 10 µm Cu wire, propagates
+1.31 m, saves float32 detector TIFFs, and reduces ten central rows outside
+the Mark1300 central q mask.
 
-!!! note "Figure unavailable"
+!!! note "Generated figure"
 
-    `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/saxs/figures/SAXS_Mark1300_collimated_6um_7p11um.png`
-    is not included in this checkout.
+    `saxs/figures/SAXS_Mark1300_collimated_6um_7p11um.png` is relative to the
+    selected sigma tree. Run notebook 02 after generating compatible inputs.
 
 **Figure 1. Clean SAXS comparison.** At fixed material and propagation, changing the Gaussian root changes wavefront curvature. The left fraction remains an S-shaped offset calibration, while detailed left/right amplitudes and saturation shift slightly.
 
-| Case | Centered fraction | Fraction range |
-|---|---|---|
-| Divergent 7.11 µm | 0.500048 | 0.373308 to 0.625469 |
-| Large-root 7.11 µm | 0.500043 | 0.377016 to 0.621674 |
-| Divergent 6.0 µm | 0.500047 | 0.374449 to 0.624308 |
-| Large-root 6.0 µm | 0.500044 | 0.376636 to 0.622059 |
+The earlier symmetric 4/4 nm audit found approximately half left fraction
+near the center. Do not reuse those numerical ranges for the current
+asymmetric wire. The 43-point grid contains no exactly zero offset; any
+reported centered value must state whether it was separately calculated or
+interpolated.
 
 > **Lesson:** matching target FWHM is necessary but not sufficient. Compare the root, wavefront radius, intensity profile, and propagated detector sampling together.
 
@@ -310,19 +378,22 @@ Notebook 01 creates four cases: divergent and large-root beams at 6.0 and 7.11 �
 
 | Branch | Calculation | Purpose |
 |---|---|---|
-| Offset scan | Reuse clean divergent 7.11 µm TIFFs; two-row Mark1300 sums; 10-row display profiles | Dense calibration curve and experimental lineout comparison. |
+| Offset scan | Reuse clean small-root 7.11 µm TIFFs; ten-row Mark1300 sums and display profiles | Dense calibration curve and experimental lineout comparison. |
 | Divergence scan | 7.11 µm baseline plus 6, 9, 12 µm divergent and 12 µm large-root cases | Separate spot-size/curvature effects on calibration slope. |
 | Gallery/movie | Target-exit PCI beside far-field SAXS for each wire offset | Verify that spatial motion and left/right response are physically consistent. |
 
-!!! note "Figure unavailable"
+!!! note "Generated figure"
 
-    `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/methods/figures/05_divergence_scan.png` is not
-    included in this checkout.
+    `methods/figures/05_divergence_scan.png` is relative to the selected sigma
+    tree. Its five cases share the 43-offset grid.
 
-**Figure 2. Existing divergence-scan figure.** Wider/less-divergent cases have a broader transition than the dense 7.11 µm baseline. The stored table now also contains a 6.0 µm case, so this figure is older than the current table.
+**Figure 2. Divergence-scan comparison.** Compare the five cases with their
+specified Gaussian root and target FWHM; width alone does not identify phase
+curvature.
 
-> **Open plotting issue found during audit**
-> The current divergence table has five cases and the column name `mark1300_frac`. Notebook 02 defines only four colors and reads `left_fraction`. Rerunning that cell will fail or omit a case until the field name and color mapping are corrected. Treat the existing PNG as historical until regenerated.
+The table schema is `case`, `offset_um`, `mark1300_frac`.
+Notebook 02 now reads that schema and has a color mapping for all five cases.
+The older schema/color mismatch is no longer an open issue in that cell.
 
 ---
 
@@ -330,10 +401,10 @@ Notebook 01 creates four cases: divergent and large-root beams at 6.0 and 7.11 �
 
 *Separate target-exit attenuation from detector-plane phase contrast*
 
-!!! note "Figure unavailable"
+!!! note "Generated figure"
 
-    `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/clean_pci/clean_pci_field_overview_6um.png` is not
-    included in this checkout.
+    `clean_pci/clean_pci_field_overview_6um.png` is relative to the selected
+    sigma tree.
 
 **Figure 3.** The 6.0 µm clean PCI chain: incident beam, wire thickness, target-exit attenuation, and propagated detector fringes. The last panel is the physical manifestation of phase-to-intensity conversion.
 
@@ -343,13 +414,16 @@ The clean branch calculates 6.0 and 7.11 µm detector PCI using exact angular-sp
 
 The unshifted Mark1300 reduction rejects \|q\| < 0.10 nm⁻¹. With `q_shift = +0.005 nm⁻¹`, the accepted sides become approximately `q < -0.095` and `q > +0.105` nm⁻¹. This is equivalent to evaluating `|q - 0.005| ≥ 0.10` nm⁻¹.
 
-| Shifted-q case | Rows averaged | Centered left fraction | Full range |
-|---|---|---|---|
-| 7.11 µm | 2 / 10 | 0.541755 / 0.541755 | 0.412167 to 0.663430 |
-| 6.0 µm | 2 / 10 | 0.541798 / 0.541798 | 0.413327 to 0.662288 |
+| Shifted-q case | Current saved table | Columns |
+|---|---|---|
+| 7.11 µm | `clean_pci/mark1300_7p11um_shifted_q_mask_left_fraction.dat` | Offset in µm, ten-row fraction. |
+| 6.0 µm | `clean_pci/mark1300_6p0um_shifted_q_mask_left_fraction.dat` | Offset in µm, ten-row fraction. |
 
 > **Lesson from the 6.0 µm correction**
-> Per-case accumulators are essential. Reusing one mutable list silently produced a second file with the first case's numbers. Notebook 01 now stores each case independently; notebook 02 validates three finite columns and rejects an exact duplicate.
+> Per-case accumulators are essential. Notebook 01 now stores each case
+> independently. The current schema is two columns, not the older
+> offset/two-row/ten-row format. Regenerate legacy files; do not assume the
+> plotting loader validates every stale-cache condition.
 
 ---
 
@@ -357,19 +431,21 @@ The unshifted Mark1300 reduction rejects \|q\| < 0.10 nm⁻¹. With `q_shift = +
 
 *What the active 6.0/7.11 µm results say*
 
-!!! note "Figure unavailable"
+!!! note "Generated figure"
 
-    `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/clean_pci/clean_pci_saxs_mark1300_left_right_vs_offset.png`
-    is not included in this checkout.
+    `clean_pci/clean_pci_saxs_mark1300_left_right_vs_offset.png` is relative
+    to the selected sigma tree.
 
-**Figure 4. Updated three-panel summary.** Top: target-exit PCI transmission and experimental transmission. Middle: far-field SAXS side signals. Bottom: shifted-q asymmetry, including independent 6.0 µm two-row and 10-row curves.
+**Figure 4. Three-panel summary.** Top: target-exit PCI transmission and
+experimental transmission. Middle: SAXS side signals. Bottom: shifted-q
+asymmetry, including independent 6.0 and 7.11 µm ten-row curves.
 
 | Observation | Physical reading |
 |---|---|
 | Exit transmission minimum | The centered wire blocks the highest-fluence part of the beam; the 6.0 µm spot gives a deeper minimum than 7.11 µm. |
 | SAXS left/right exchange | Moving the wire reverses which finite-q side receives more power, giving the calibration sigmoid. |
 | Shifted baseline | A centered symmetric object no longer gives 0.5 because the analysis mask is intentionally displaced. |
-| 2 rows vs 10 rows | The near-identical curves here indicate vertical averaging stabilizes noise without materially changing this symmetric simulated reduction. |
+| Ten-row averaging | A fixed extraction convention, not an independent source of noise or a detector-noise simulation. |
 
 ---
 
@@ -379,19 +455,23 @@ The unshifted Mark1300 reduction rejects \|q\| < 0.10 nm⁻¹. With `q_shift = +
 
 The measured profile branch reads `RealisticProfile_10nm.tif`, clips invalid/negative values, resamples from 10 nm to the 8 nm simulation grid, normalizes total intensity, and uses `sqrt(intensity)` as amplitude. The missing phase is supplied by the divergent 7.11 µm Gaussian curvature.
 
-!!! note "Figure unavailable"
+!!! note "Generated figure"
 
-    `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/realistic_profile/figures/01_realistic_vs_gaussian_profile.png`
-    is not included in this checkout.
+    `realistic_profile/figures/01_realistic_vs_gaussian_profile.png` is
+    relative to the selected sigma tree.
 
 **Figure 5.** The measured profile is structured and slightly asymmetric relative to the nominal Gaussian. This changes beam–wire overlap and therefore both exit transmission and SAXS asymmetry.
 
-| Metric | Current artifact |
+| Saved observable | Convention |
 |---|---|
-| Realistic target-exit left fraction | 0.431897 to 0.586446; centered 0.506338 |
-| Realistic total transmission | 0.727045 to 0.994101 |
-| Realistic SAXS left fraction | 0.372335 to 0.625611; centered 0.487651 |
-| Detector lineout | 10 central rows; side sums outside \|q\| < 0.10 nm⁻¹ |
+| Target-exit left fraction | Exit-plane left sum divided by total exit sum; not propagated detector PCI. |
+| Total transmission | Exit-plane total divided by incident total. |
+| Realistic SAXS left fraction | Ten-row signed-horizontal-q side sums using the unshifted `Q_AXIS` cutoff. |
+| Detector lineout bundle | Raw ten-row lineouts, q axis, offsets in µm, and lineout-row metadata. |
+
+Numerical ranges from the previous symmetric-sigma snapshot are not current
+values. Derive them from the selected sigma tree and state any interpolation
+used to quote a value at zero offset.
 
 In the combined “SAXS left ratio versus motor experiment” panel, the realistic
 and 7.11 µm Gaussian ratios use the fractional mask centered at
@@ -409,14 +489,34 @@ uncertainty is shown as a shaded envelope around the measured response.
 
 ### Gaussian experimental comparison
 
-The active comparison reuses divergent 7.11 µm SAXS TIFFs and calculates distinct analytic-chord target-exit PCI images. It compares simulated transmission with the r0484 motor scan after independent max normalization. The current analytic transmission minimum is 0.741599 at zero offset and reaches 1 away from the wire.
+The current calculation notebook reuses small-root 7.11 µm SAXS TIFFs and
+calculates distinct analytic-chord target-exit PCI images. It also writes
+`experimental_comparison/tables/analytic_exit_transmission.dat` on a
+49-offset grid. The simulated transmission is normalized by its maximum;
+the experimental transmission is normalized separately for shape comparison.
 
-!!! note "Figure unavailable"
+!!! note "Calculation and plotting revisions differ"
 
-    `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/experimental_comparison/figures/04_exit_transmission.png`
-    is not included in this checkout.
+    Notebook 02's Gaussian comparison section currently saves SAXS-only
+    detector images. Its plotting code does not consume the analytic PCI and
+    transmission outputs still produced by notebook 01. Those files are not
+    evidence that the SAXS-only figure contains propagated PCI.
 
-**Figure 6.** Simulated target-exit transmission versus the experimental scan. Shape agreement is meaningful; absolute-flux agreement is not tested because each curve is normalized independently.
+### Position-matched realistic detector figures
+
+Notebook 02 has a plotting section that loads
+`combined_plot_data/rosa_realistic_detector_comparison.npz` from the selected
+sigma tree. It expects experimental/simulated images, actual and requested
+offsets, motor positions, filenames, and explicit experimental/simulation
+extents. It saves figures under `realistic_profile/figures/rosa_wire_scan/`.
+The panels use separate logarithmic intensity scales, not an absolute-flux
+calibration.
+
+The current notebook 01 contains no cell that produces this bundle, and its
+completion manifest does not list it. Do not promise that running notebook 01
+from top to bottom regenerates these figures. Supply a bundle from the
+matching calculation revision before using that plotting section. The README
+describes a producer that is not present in this notebook snapshot.
 
 ### Legacy calculation families
 
@@ -424,7 +524,7 @@ The active comparison reuses divergent 7.11 µm SAXS TIFFs and calculates distin
 |---|---|---|
 | `SAXS_PCI_Pointing_Div.ipynb` | Reproduce historical Gaussian/wire propagation and TIFFs | Current q mask, axis direction, or filenames. |
 | `PlotSAXS_Pointing_Div.ipynb` | Reproduce earlier Mark1300 plots | Current row averaging, central exclusion, or orientation. |
-| `idealc.ipynb` | Idealized 2048-grid LightPipes-style study | Current copper constants, sampling, or active pipeline equivalence. |
+| Historical `idealc.ipynb` reference | Older idealized LightPipes-style study; notebook absent from the current checkout | A runnable entry point in the current repository. |
 | `PCI.py` LightPipes compatibility method | Fixed-grid Fresnel legacy reproduction | Same behavior as exact angular spectrum or scaled single-FFT Fresnel. |
 
 > **Legacy rule**
@@ -469,13 +569,13 @@ The active comparison reuses divergent 7.11 µm SAXS TIFFs and calculates distin
 | Dimension | `PCI.py` | `PCI_torch.py` |
 |---|---|---|
 | Backend | NumPy/SciPy FFT and interpolation | PyTorch tensors and `torch.fft`, plus SciPy/PIL utilities |
-| Current import | Passes | Fails: `multiprocess` missing; `torchvision` and `torchaudio` also absent |
-| Portability | Repository-contained except optional LightPipes | Hard-coded `/home/thiess94/...` path and external `propagatorsv1` module |
+| Dependency contract | Declared NumPy/SciPy notebook stack | Additional `multiprocess`, `torch`, `torchvision`, and `torchaudio` imports are outside the declared project dependencies. |
+| Portability | Repository-contained except optional LightPipes | Machine-specific external search path and `propagatorsv1` import. |
 | Device/batch | Single array, CPU | `device` and `batch_size` parameters; spot shifts and noise batches |
 | Precision | Mostly NumPy `complex128` unless cast | Gaussian source explicitly `complex64` |
 | Propagators | Angular spectrum, scaled Fresnel, optional LightPipes | Angular spectrum, scaled Fresnel, and external selectable propagators |
 | Autograd | Not applicable | Core FFT operations can be differentiable, but SciPy, NumPy, `detach`/`cpu` calls, and global diagnostics break end-to-end guarantees |
-| Validation status | Used by generated artifacts | No parity tests or benchmark found |
+| Validation status | Used by the calculation notebook | No parity tests or benchmark in the current test suite. |
 
 ### Important numerical differences found
 
@@ -519,11 +619,13 @@ The active comparison reuses divergent 7.11 µm SAXS TIFFs and calculates distin
 
 | Finding | Impact | Action |
 |---|---|---|
-| Clean/realistic offset grid | 43 samples from −10.0 through +10.16 µm at exactly 0.48 µm spacing | The Methods scan, paired comparison, and GIF reuse this grid; the PCI, divergence, and transmission grids remain unchanged. |
+| Clean/realistic offset grid | 43 samples from −10.0 through +10.16 µm at exactly 0.48 µm spacing | Methods, divergence, paired comparison, and GIF reuse it; clean PCI and analytic transmission retain separate grids. |
 | Two q-axis conventions | `linspace` endpoints differ slightly from exact FFT-bin spacing | Use one exported q axis for masks, interpolation, tables, and plots. |
-| Divergence plot schema mismatch | Notebook 02 may fail or omit the fifth case | Read `mark1300_frac` and map colors by case name. |
-| Manifest artifact is stale | Existing JSON does not yet list the new 6.0 µm shifted-q file | Rerun notebook 01 completion cell after calculation changes. |
-| Historical docs use old values | Wiki can silently mix 7.5/20 nm with 7.11/8 nm | Add versioned current/legacy tables. |
+| Old shifted-mask tables | Three-column two-row/ten-row artifacts do not match the current two-column format | Regenerate both cases with ten-row extraction and rerun the completion cell. |
+| Manifest coverage | The completion cell lists both shifted cases, but not the realistic smoothing sweep or position-matched detector bundle | Track these additional inputs separately; the manifest is not an exhaustive inventory. |
+| Pair-checkpoint reuse | Valid shape/offset/finiteness does not establish full physical compatibility | Invalidate affected pair tables when source, target, grid, or reduction assumptions change. |
+| Detector comparison producer missing | Position-matched plotting consumes a bundle absent from the current calculation pipeline | Obtain the matching producer revision or an existing compatible bundle before plotting. |
+| Historical baseline | Old 4/4 nm results can be mistaken for the current 4.67/0 nm selection | State sigma pair, extraction schema, and q shift with every reported value. |
 
 ---
 
@@ -552,7 +654,7 @@ The active comparison reuses divergent 7.11 µm SAXS TIFFs and calculates distin
 | 2. Physics | Gaussian beam, Cu transmission, PCI/SAXS manifestation, validity limits. |
 | 3. Numerical methods | Angular spectrum, Fresnel FFT, sampling, normalization, memory. |
 | 4. Active workflows | Notebook 01 sections, artifacts, notebook 02 figures, run order. |
-| 5. Reduction conventions | Mark1300 mask, shifted q, two/10 rows, left/right orientation. |
+| 5. Reduction conventions | Mark1300 mask, shifted q, ten-row extraction, legacy two-row distinction, left/right orientation. |
 | 6. Experiment comparison | Runs, interpolation, motor scan, normalization, uncertainty. |
 | 7. PCI.py vs PCI_torch | Capability matrix, blockers, parity tests, benchmark protocol. |
 | 8. Legacy archive | Historical notebooks, LightPipes, old values, reproduction notes. |
@@ -570,38 +672,46 @@ The active comparison reuses divergent 7.11 µm SAXS TIFFs and calculates distin
 | Source | Role |
 |---|---|
 | `notebooks/saxs_asymmetry/01_calculate_and_save_data.ipynb` | Active calculation and artifact pipeline. |
-| `notebooks/saxs_asymmetry/02_plot_and_save_figures.ipynb` | Active read-only plotting pipeline. |
-| `src/SAXS_asymmetry/quick_symmetric_sigma_check.py` | Standalone 0/3/3.8/4/6/8/14 nm symmetric-sigma Mark1300 sensitivity runner for 7.11 µm with 0.48 µm offset spacing, Erik motor-scan overlay, and both wire-edge thickness zooms. |
+| `notebooks/saxs_asymmetry/02_plot_and_save_figures.ipynb` | Artifact-consuming plotting pipeline; does not repeat propagation. |
+| `src/SAXS_asymmetry/quick_symmetric_sigma_check.py` | Standalone Gaussian symmetric-sigma or independent-pair sensitivity tool. |
+| `src/SAXS_asymmetry/paths.py` | Canonical repository paths and environment overrides. |
 | `src/SAXS_asymmetry/PCI.py` | Reference NumPy/SciPy wave-propagation implementation. |
 | `src/SAXS_asymmetry/PCI_torch.py` | Experimental PyTorch port. |
 | `docs/SAXS-PCI.md` | Unified physical interpretation. |
 | `docs/propagators.md` | Propagation equations and intended implementation behavior. |
 | `docs/saxs_intensity_workflow.md` | Detailed SAXS workflow and propagation notes. |
 | `docs/pci_intensity_workflow.md` | Detailed PCI workflow and physical interpretation. |
-| `SAXS_asymmetry/01_variables_and_functions.md` | Notebook variable/function inventory. |
-| `outputs/combined_plot_data/calculation_manifest.json` | Generated artifact inventory; currently needs refresh for the new 6.0 shifted-q file. |
+| `outputs/saxs_asymmetry/<sigma_tag>/combined_plot_data/calculation_manifest.json` | Selected-run manifest written by notebook 01's completion cell. |
 
 ### Primary generated artifacts cited in the analysis
 
 | Artifact family | Location |
 |---|---|
-| Clean SAXS tables/TIFFs | `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/saxs/` |
-| Methods tables/figures/movie | `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/methods/` |
-| Clean PCI fields/tables/figures | `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/clean_pci/` and `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/combined_plot_data/` |
+| Clean SAXS tables/TIFFs | `outputs/saxs_asymmetry/<sigma_tag>/saxs/` |
+| Methods tables/figures/movie | `outputs/saxs_asymmetry/<sigma_tag>/methods/` |
+| Clean PCI fields/tables/figures | `outputs/saxs_asymmetry/<sigma_tag>/clean_pci/` and `outputs/saxs_asymmetry/<sigma_tag>/combined_plot_data/` |
 | Symmetric-sigma sensitivity tables/figures | `outputs/saxs_asymmetry/quick_symmetric_sigma/` |
-| Realistic-profile results | `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/realistic_profile/` |
-| Experimental comparison | `outputs/saxs_asymmetry/sigmaL_4nm_sigmaR_4nm/experimental_comparison/` |
+| Realistic smoothing-pair results | `outputs/saxs_asymmetry/realistic_sigma_pair_scan/` |
+| Realistic-profile results | `outputs/saxs_asymmetry/<sigma_tag>/realistic_profile/` |
+| Experimental comparison | `outputs/saxs_asymmetry/<sigma_tag>/experimental_comparison/` |
+
+Here `<sigma_tag>` is generated from the selected pair; the current value is
+`sigmaL_4p67nm_sigmaR_0nm`. The directory structures above are relative to the
+default output root and follow `PCI_OUTPUT_DIR` when overridden.
 
 ---
 
 ### Status of this guide
 
-This is a technical synthesis of the repository snapshot on 3 September 2026. It is intended for internal documentation and code review. It is not a substitute for experimental calibration, uncertainty analysis, or peer-reviewed validation of the physical model.
+This guide was updated against the repository structure and notebook sources
+on 22 October 2026. It is not a new numerical validation of every saved
+artifact, nor a substitute for experimental calibration, uncertainty
+analysis, or peer-reviewed validation of the physical model.
 
 *Prepared locally from repository sources. No external scientific claims were introduced beyond the equations and assumptions implemented or documented in the codebase.*
 
 ---
 
-*Converted from `output/pdf/pci_saxs_workflows_lessons.pdf` (17 pages).
-Original figure paths are retained as provenance, but unavailable PNG files
-are not embedded in this site.*
+*Originally converted from a historical PDF report. Generated figures are
+described by their current artifact locations rather than embedded in the
+documentation site.*

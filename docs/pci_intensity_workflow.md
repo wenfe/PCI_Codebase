@@ -4,9 +4,9 @@ icon: lucide/scan-line
 
 # PCI intensity calculation: workflow and physical meaning
 
-This summary follows the documented `PCI.py` implementation, connects it to
+This summary follows the current `src/SAXS_asymmetry/PCI.py` implementation, connects it to
 the wave-optics discussion in [`SAXS-PCI.md`](SAXS-PCI.md), and explains how
-the calculation was used in `01_calculate_and_save_data.ipynb`.
+the calculation is used in the active calculation notebook.
 
 For the corresponding SAXS calculation and its Fresnel/Fraunhofer distinction, see the [SAXS intensity workflow](saxs_intensity_workflow.md).
 
@@ -14,6 +14,28 @@ For the corresponding SAXS calculation and its Fresnel/Fraunhofer distinction, s
 
     The implementation lives at `src/SAXS_asymmetry/PCI.py` and the workflow at
     `notebooks/saxs_asymmetry/01_calculate_and_save_data.ipynb`.
+    `notebooks/saxs_asymmetry/02_plot_and_save_figures.ipynb` loads saved
+    artifacts to produce figures without repeating propagation.
+
+## Repository structure and artifact ownership
+
+`src/SAXS_asymmetry/paths.py` resolves the repository's `data/` input root
+and `outputs/saxs_asymmetry/` study-output root. The environment variables
+`PCI_DATA_DIR` and `PCI_OUTPUT_DIR` override those roots. Start the notebooks
+from inside the repository so their setup can locate `pyproject.toml`.
+
+Both notebooks must select the same left/right sigma pair. The current
+4.67/0 nm selection writes main results under
+`outputs/saxs_asymmetry/sigmaL_4p67nm_sigmaR_0nm/`. The directory tag is
+derived from the configured values, with decimal points represented by `p`.
+Other sigma pairs retain separate result trees.
+
+Within the selected tree, `combined_plot_data/` stores compact plot inputs
+and `calculation_manifest.json`; `clean_pci/` stores propagated PCI detector
+TIFFs and exit-transmission tables. Run notebook 01's relevant sections and
+completion cell before notebook 02's setup and matching plots. See the
+[repository layout](index.md#repository-and-execution-layout) for the other
+study directories.
 
 ## Starting point: Rayleigh–Sommerfeld propagation in real space
 
@@ -297,15 +319,36 @@ At the `Beamline` level, detector position is an absolute longitudinal coordinat
 | Photon energy | 8.2 keV, monochromatic; $\lambda\simeq0.15120$ nm |
 | Beam grid | $4096\times4096$ at 8 nm; 32.768 µm window width |
 | Source-to-sample distance | 0.25 m |
-| Sample-to-PCI distance | 6.31 m, passed directly as a propagation distance $Z$|
+| Sample-to-PCI distance | 6.31 m, passed directly as a propagation distance $Z$ |
 | Cu wire | Radius 5 µm; central thickness 10 µm |
 | Target grid | 2000 samples per transverse dimension at 8 nm |
-| Boundary blur widths | Left and right both 4 nm |
+| Boundary blur widths | Left 4.67 nm, right 0 nm; selected independently in both notebooks |
 | Incident intensity FWHM at the sample | Separate 6.0 and 7.11 µm cases |
 
-The centered calculation is `incident -> exit_field -> detector_field`. It saves incident intensity, thickness, and exit intensity in `clean_pci_fields*.npz`, and saves $|E_{\mathrm{detector}}|^2$ separately in `clean_pci_detector_intensity*.tif`. Despite the NPZ filename, that bundle does **not** store the complex fields or their phases.
+The centered calculation is `incident -> exit_field -> detector_field`.
+It saves incident intensity, thickness, and exit intensity in
+`combined_plot_data/clean_pci_fields*.npz`, and saves
+$|E_{\mathrm{detector}}|^2$ separately in
+`clean_pci/clean_pci_detector_intensity*.tif`. Paths are relative to the
+selected sigma tree. Despite the NPZ filename, that bundle does **not**
+store the complex fields or their phases.
+
+| Artifact relative to the selected sigma tree | Observable |
+|---|---|
+| `combined_plot_data/clean_pci_fields.npz` and `clean_pci_fields_6um.npz` | Incident intensity, thickness in µm, exit intensity, extent, and FWHM for the 7.11 and 6.0 µm cases. |
+| `clean_pci/clean_pci_detector_intensity*.tif` | Propagated detector-plane intensity at 6.31 m. |
+| `clean_pci/pci_exit_left_right_vs_offset*.dat` | Offset in µm, left/incident, right/incident, and total/incident exit transmission. |
+| `clean_pci/clean_pci_exit_left_right_raw_vs_offset*.dat` | Offset in µm and raw left, right, and total exit-plane sums. |
+| `clean_pci/mark1300_*_shifted_q_mask_left_fraction.dat` | Offset in µm and ten-row shifted-mask SAXS fraction; not detector PCI. |
 
 The separate `scan_clean_pci_exit()` evaluates absorption-weighted transmission for 50 offsets from −10 to +10 µm. It calculates left/right exit-plane sums and normalizes them by total incident intensity. It does not propagate to the PCI detector. Likewise, several Methods, realistic-profile, and experimental-comparison outputs named “PCI” are sample-exit intensity or transmission. Their physical interpretation follows the observation plane, not the filename.
+
+All current SAXS lineouts average ten central detector rows. The shifted
+SAXS tables stored beside PCI results now have two columns, not the older
+offset/two-row/ten-row format. Regenerate old reductions and the completion
+manifest after changing the extraction convention. The realistic
+smoothing-pair comparison is a separate SAXS sweep under the study-level
+`realistic_sigma_pair_scan/` directory; it does not calculate propagated PCI.
 
 For scale, the current Cu formulas at 8.2 keV give
 
