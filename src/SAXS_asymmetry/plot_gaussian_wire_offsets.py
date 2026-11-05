@@ -318,8 +318,9 @@ def main():
         coordinate_mapping="Blender X = beam z; Blender Y = transverse x; Blender Z = wire y; one unit = one µm in interaction scenes",
         offset_definition="wire centre minus beam axis along the transverse coordinate",
         panel_layout=figure["panel_layout"],
-        incident_beam_direction="Editable Blender arrow along physical +z (Blender +X), before the Cu wire in panel (a)",
-        reflected_beam_direction="Editable red arrow along the reflected SAXS branch toward Jungfrau in panel (a)",
+        incident_beam_direction="Editable solid blue arrow along physical +z (Blender +X), before the Cu wire in panel (a)",
+        transmitted_beam_direction="Editable blue arrow with Gaussian light after the Cu wire toward XPCI in panel (a)",
+        reflected_beam_direction="Editable blue arrow along the reflected SAXS branch toward Jungfrau in panel (a)",
         experimental_offset_files={f"{offset:+g}": EXPERIMENTAL_OFFSET_FILES[offset]
                                    for offset in args.offsets if offset in EXPERIMENTAL_OFFSET_FILES},
         coordinate_axes="Panels (b)-(d): x transverse to beam and wire, y along wire, z along beam; shared origin at beam exit",
@@ -327,13 +328,13 @@ def main():
         beam_style=BEAM_STYLE,
         apparatus_style=APPARATUS_STYLE,
         beam_style_reference="Huber et al., Nature Communications 13, 3220 (2022), Fig. 1. doi:10.1038/s41467-022-30703-y",
-        beam_contours="Golden outer envelope: 1/e² intensity radius. Bright inner core: half-maximum radius. Gaussian halo continues beyond the contours.",
+        beam_contours="Panels (b)-(d): golden outer envelope at 1/e² intensity radius and bright inner core at half-maximum radius. Panel (a): soft blue Gaussian light without contour shells.",
         geometric_intercepted_fraction=data["geometric_intercepted_fraction"].tolist(),
         interpretation="Incident envelope and geometry only; display volume density is illustrative, not absorption or propagated detector intensity.",
         wire_surface="Sharp cylinder; notebook nanometre edge blur is not resolved at this schematic scale.",
         reference="Huang et al., Fig. 2, Matter Radiat. Extremes 11, 017201 (2026). doi:10.1063/5.0279974",
         detectors="Jungfrau SAXS and XPCI/Optique Peter image panels from Huang et al., Fig. 2. Both published images are packed into the Blender file; they are reference panels, not newly simulated detector results. The XPCI label identifies the paper's 7.5x objective and Andor Zyla camera.",
-        reflected_beams="Exactly one red 3D Gaussian-style reflected SAXS branch beginning on the upper HAPG surface and reaching the Jungfrau panel. Its width and path are illustrative, not separate physical ray traces from each mirror.",
+        reflected_beams="Exactly one blue 3D Gaussian-style reflected SAXS branch beginning on the upper HAPG surface and reaching the Jungfrau panel. Its width and path are illustrative, not separate physical ray traces from each mirror.",
         mirrors="Two original green Highly Annealed Pyrolytic Graphite plates restored, including their locations, dimensions and parallel 15-degree tilts. Apparatus dimensions, distances and angles are schematic.",
         scene_names=[scene.name for scene in bpy.data.scenes], samples=args.samples,
         combined_resolution=[figure.render.resolution_x, figure.render.resolution_y], outputs=[str(path) for path in paths],
@@ -351,4 +352,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

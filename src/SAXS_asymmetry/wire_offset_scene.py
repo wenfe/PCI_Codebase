@@ -23,10 +23,11 @@ INK, MUTED, BLUE, COPPER, GREEN, RULE = (
     "#182c40", "#596b7b", "#266ac2", "#b56835", "#729d40", "#dce4eb")
 BEAM = "#c28a00"
 BEAM_STYLE = "Golden translucent envelope and bright Gaussian core, inspired by Huber et al., Fig. 1 (2022)."
-APPARATUS_STYLE = "Huang et al., Fig. 2: two green HAPG plates and Jungfrau/XPCI reference panels, with a gold 3D primary beam and one red 3D reflected SAXS branch."
+APPARATUS_STYLE = "Huang et al., Fig. 2: two green HAPG plates and Jungfrau/XPCI reference panels, with blue primary arrows, downstream Gaussian light, and one blue reflected SAXS branch."
 BEAM_COLORS = {
     "gold": ("#ffd229", "#ffcd13", "#ffd022", "#ffe21a", "#e5a300"),
     "red": ("#ff4436", "#ff291c", "#ff392f", "#ff5536", "#d42a21"),
+    "blue": ("#438ce4", "#8ac1ff", "#83bbf6", "#9dcbff", "#347bd0"),
 }
 
 
@@ -219,11 +220,12 @@ def beam_surface(name, color, opacity):
 
 
 def gaussian_volume(name, fwhm, length=36, center=(0, 0, 0), density=0.12,
-                    color="gold", opacity_scale=1):
+                    color="gold", opacity_scale=1, contours=True):
     """Paper-inspired translucent beam with a Gaussian core and explicit envelope.
 
     The 1/e² shell and half-maximum core are intensity contours, not hard beam
     edges. The halo retains the original radial Gaussian and target-plane FWHM.
+    Contours can be hidden for a soft schematic glow.
     """
     volume_color, emission_color, envelope_color, core_color, rim_color = BEAM_COLORS[color]
     mat = bpy.data.materials.new(name + " radial Gaussian volume")
@@ -261,20 +263,20 @@ def gaussian_volume(name, fwhm, length=36, center=(0, 0, 0), density=0.12,
                           if color == "gold" else "Illustrative SAXS envelope; Gaussian radial display profile, not a propagated detector intensity.")
     obj["beam_style"] = BEAM_STYLE if color == "gold" else APPARATUS_STYLE
     obj["display_color"] = color
-    w = fwhm/math.sqrt(2*math.log(2))
-    envelope = cylinder(name + " | translucent 1/e² envelope", w, length, center,
-                        beam_surface(name + " translucent envelope", envelope_color, 0.16*opacity_scale), axis="X")
-    envelope["relative_intensity_contour"] = math.exp(-2)
-    core = cylinder(name + " | luminous half-maximum core", fwhm/2, length, center,
-                    beam_surface(name + " luminous core", core_color, 0.3*opacity_scale), axis="X")
-    core["relative_intensity_contour"] = 0.5
-    # Fine amber rims clarify the circular cross-section without a foggy edge.
-    theta = [i*math.tau/160 for i in range(160)]
-    rim = beam_surface(name + " contour", rim_color, 0.7*opacity_scale)
-    for side in [-1, 1]:
-        line(name + " | envelope rim", [(center[0]+side*length/2,
-             center[1]+w*math.cos(t), center[2]+w*math.sin(t)) for t in theta],
-             rim, min(0.045, fwhm*0.006), closed=True)
+    if contours:
+        w = fwhm/math.sqrt(2*math.log(2))
+        envelope = cylinder(name + " | translucent 1/e² envelope", w, length, center,
+                            beam_surface(name + " translucent envelope", envelope_color, 0.16*opacity_scale), axis="X")
+        envelope["relative_intensity_contour"] = math.exp(-2)
+        core = cylinder(name + " | luminous half-maximum core", fwhm/2, length, center,
+                        beam_surface(name + " luminous core", core_color, 0.3*opacity_scale), axis="X")
+        core["relative_intensity_contour"] = 0.5
+        theta = [i*math.tau/160 for i in range(160)]
+        rim = beam_surface(name + " contour", rim_color, 0.7*opacity_scale)
+        for side in [-1, 1]:
+            line(name + " | envelope rim", [(center[0]+side*length/2,
+                 center[1]+w*math.cos(t), center[2]+w*math.sin(t)) for t in theta],
+                 rim, min(0.045, fwhm*0.006), closed=True)
     return obj
 
 
@@ -319,20 +321,20 @@ def assembly(name, location, rotation=None):
     return obj
 
 
-def beam_segment(name, start, end, fwhm, *, opacity_scale=1):
+def beam_segment(name, start, end, fwhm, *, opacity_scale=1, color="red", contours=True):
     """Orient the same radial beam shader along an arbitrary 3D ray."""
     start, end = Vector(start), Vector(end)
     vector = end-start
     before = set(bpy.context.scene.objects)
-    gaussian_volume(name + " volume", fwhm, length=vector.length, color="red",
-                    density=0.15, opacity_scale=opacity_scale)
+    gaussian_volume(name + " volume", fwhm, length=vector.length, color=color,
+                    density=0.15, opacity_scale=opacity_scale, contours=contours)
     parts = set(bpy.context.scene.objects)-before
     parent = assembly(name, (start+end)/2, Vector((1, 0, 0)).rotation_difference(vector.normalized()))
     for obj in parts:
         obj.parent = parent
     parent["beam_start"] = list(start)
     parent["beam_end"] = list(end)
-    parent["description"] = "Illustrative red SAXS beam envelope; not a simulated angular intensity distribution."
+    parent["description"] = f"Illustrative {color} SAXS beam envelope; not a simulated angular intensity distribution."
     return parent
 
 
@@ -395,17 +397,21 @@ def draw_setup_3d(config, width=2800, samples=32):
         "ink": material("Apparatus labels", INK, flat=True),
         "muted": material("Apparatus secondary labels", MUTED, flat=True),
     }
-    beam_ink = material("Golden primary XFEL annotations", BEAM, flat=True)
-    red_ink = material("Red reflected SAXS annotations", "#cd352a", flat=True)
+    beam_ink = material("Blue primary XFEL annotations", "#052d70", flat=True)
+    reflected_ink = material("Blue reflected SAXS annotations", "#287fbe", flat=True)
     copper = material("Beamline copper", "#cf8d55", metal=0.4, roughness=0.42)
-    cylinder("Cu target wire", 0.9, 16, (-37, 0, 0), copper)
-    # Retain the paper's horizontal primary beam and panel layout.
-    # The beam ends just before the XPCI reference panel's left edge.
-    gaussian_volume("Schematic primary XFEL", 1.4, length=122.6, center=(-3.7, 0, 0), density=0.3)
-    # The physical +z direction maps to Blender +X. Keep the annotation on
-    # the camera-facing side of the incoming beam so the volume cannot hide it.
-    arrow("Incident beam direction (+z)", (-64, -2, 0), (-41, -2, 0),
-          beam_ink, radius=0.085, head=1.1)
+    wire_x, wire_radius = -37, 0.9
+    cylinder("Cu target wire", wire_radius, 16, (wire_x, 0, 0), copper)
+    wire_entry, wire_exit = wire_x-wire_radius, wire_x+wire_radius
+    primary_end = 57.6
+    primary = gaussian_volume("Schematic primary XFEL", 1.4, length=primary_end-wire_exit,
+                              center=((wire_exit+primary_end)/2, 0, 0), density=0.3,
+                              color="blue", contours=False)
+    primary["description"] = "Transmitted Gaussian light after the Cu wire; illustrative display, not a propagated detector intensity."
+    arrow("Incident beam direction (+z)", (-64, -2, 0), (wire_entry, -2, 0),
+          beam_ink, radius=0.22, head=1.5)
+    arrow("Transmitted beam direction (+z)", (wire_exit, -2, 0), (primary_end, -2, 0),
+          beam_ink, radius=0.22, head=1.5)
     text("Beam direction (+z)", (-52.5, -2, -3.4), 1.25, beam_ink,
          align="CENTER", facing=cam)
     detector = saxs_detector(cam)
@@ -417,20 +423,21 @@ def draw_setup_3d(config, width=2800, samples=32):
     end = detector.location + cam.rotation_euler.to_quaternion() @ panel_anchor
     upper_mirror = mirrors[1]
     start = upper_mirror.location + upper_mirror.rotation_euler.to_quaternion() @ Vector((-5, -1, 0.325))
-    reflected = beam_segment("Reflected SAXS | single branch", start, end, 1.2)
+    reflected = beam_segment("Reflected SAXS | single branch", start, end, 1.2,
+                             color="blue", contours=False)
     reflected["description"] = "One combined SAXS branch touching the upper HAPG surface and reaching the Jungfrau panel; illustrative beam width and path."
     reflected["reference_panel_anchor"] = list(panel_anchor)
     # A camera-facing arrow follows the reflected branch toward Jungfrau.
     # Its small depth offset keeps the annotation clear of the beam volume.
     arrow_front = cam.rotation_euler.to_quaternion() @ Vector((0, 0, 2.2))
     arrow("Reflected SAXS direction", start.lerp(end, 0.12) + arrow_front,
-          start.lerp(end, 0.88) + arrow_front, red_ink, radius=0.10, head=1.1)
+          start.lerp(end, 0.88) + arrow_front, reflected_ink, radius=0.10, head=1.1)
     pci_detector(cam)
     for label, location, size, mat, align in [
         (f"Gaussian XFEL  /  {config['PHOTON_ENERGY']:g} keV", (-68, 0, 3.2), 1.65, beam_ink, "LEFT"),
         (f"{2*config['WIRE_RADIUS']/1000:g} µm Cu wire", (-37, 0, 11), 1.7, palette["ink"], "CENTER"),
         ("SAXS HAPG mirrors", (2, -3, -7.5), 1.6, palette["ink"], "CENTER"),
-        ("Reflected SAXS", (3, -2, 15), 1.6, red_ink, "CENTER"),
+        ("Reflected SAXS", (3, -2, 15), 1.6, reflected_ink, "CENTER"),
         ("Primary XFEL through gap", (29, -2, -4.5), 1.2, beam_ink, "CENTER"),
         (f"SAXS / Jungfrau  ·  {config['Z_SAXS_DETECTOR']/1e9:g} m", (26, 0, 28.5), 1.55, palette["ink"], "CENTER"),
         ("XPCI", (64, 0, 10), 1.9, palette["ink"], "CENTER"),
@@ -442,10 +449,11 @@ def draw_setup_3d(config, width=2800, samples=32):
         line("Distance endpoint", [(x, -3, -14.5), (x, -3, -15.5)], palette["muted"], 0.045)
     text(f"{config['Z_PCI_DETECTOR']/1e9:g} m from wire", (48, -3, -14.4), 1.3, palette["muted"],
          align="CENTER", facing=cam)
-    scene["interpretation"] = "Fig. 2 HAPG plates, Jungfrau and XPCI image panels with 3D beams. One red branch represents collected SAXS; both detector images are published references, not new simulations."
+    scene["interpretation"] = "Fig. 2 HAPG plates, Jungfrau and XPCI image panels with 3D beams. One blue branch represents collected SAXS; both detector images are published references, not new simulations."
     scene["apparatus_style"] = APPARATUS_STYLE
-    scene["incident_beam_direction"] = "Physical +z (Blender +X), left to right toward the Cu wire"
-    scene["reflected_beam_direction"] = "Red arrow along the reflected SAXS branch from the HAPG mirror toward Jungfrau"
+    scene["incident_beam_direction"] = "Solid blue arrow along physical +z (Blender +X), before the Cu wire"
+    scene["transmitted_beam_direction"] = "Blue arrow and Gaussian light after the Cu wire toward XPCI"
+    scene["reflected_beam_direction"] = "Blue arrow along the reflected SAXS branch from the HAPG mirror toward Jungfrau"
     fit_apparatus_camera(scene)
     return scene
 

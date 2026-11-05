@@ -27,6 +27,12 @@ for scene in bpy.data.scenes:
     assert math.isclose(scene.unit_settings.scale_length, 1e-6, rel_tol=1e-6)
     beam = next(obj for obj in scene.objects if "intensity_fwhm_um" in obj)
     assert math.isclose(beam["intensity_fwhm_um"], fwhm)
+    assert beam["display_color"] == "gold"
+    contours = [obj["relative_intensity_contour"] for obj in scene.objects
+                if "relative_intensity_contour" in obj]
+    assert len(contours) == 2
+    assert any(math.isclose(value, math.exp(-2)) for value in contours)
+    assert any(math.isclose(value, 0.5) for value in contours)
     nodes = beam.data.materials[0].node_tree.nodes
     coefficient = -4*math.log(2)/fwhm**2
     assert any(node.type == "MATH" and node.operation == "MULTIPLY"
@@ -93,7 +99,9 @@ branches = [obj for obj in beamline.objects if "beam_start" in obj]
 assert len(branches) == 1
 reflected = branches[0]
 assert reflected.name == "Reflected SAXS | single branch"
-assert sum(obj.get("display_color") == "red" for obj in beamline.objects) == 1
+assert sum(obj.get("display_color") == "blue" for obj in beamline.objects) == 2
+assert not any(obj.get("display_color") == "red" for obj in beamline.objects)
+assert any(child.get("display_color") == "blue" for child in reflected.children)
 assert not any(obj.name.startswith("Incident SAXS") for obj in beamline.objects)
 start, end = Vector(reflected["beam_start"]), Vector(reflected["beam_end"])
 mirror_frame = beamline.objects["HAPG mirror 2"].evaluated_get(depsgraph).matrix_world
@@ -111,8 +119,28 @@ assert np.allclose(tuple(pci.location), (64, -1, 0))
 assert "Optique Peter" in beamline.objects
 assert not any(obj.name.startswith("Zyla ") for obj in beamline.objects)
 primary = beamline.objects["Schematic primary XFEL"]
+wire = beamline.objects["Cu target wire"]
+wire_entry = wire.location.x-wire.dimensions.x/2
+wire_exit = wire.location.x+wire.dimensions.x/2
+primary_start = primary.location.x-primary.dimensions.x/2
 primary_end = primary.location.x+primary.dimensions.x/2
+assert math.isclose(primary_start, wire_exit, abs_tol=1e-4)
 assert math.isclose(primary_end, 57.6, abs_tol=1e-4)
+assert not any(obj.name.startswith("Schematic primary XFEL |") for obj in beamline.objects)
+incoming = beamline.objects["Incident beam direction (+z)"]
+transmitted = beamline.objects["Transmitted beam direction (+z)"]
+assert incoming.data.bevel_depth >= 0.2
+assert transmitted.data.bevel_depth >= 0.2
+assert math.isclose(incoming.data.splines[0].points[0].co.x, -64, abs_tol=1e-4)
+assert math.isclose(transmitted.data.splines[0].points[0].co.x, wire_exit, abs_tol=1e-4)
+for name, expected_tip in [("Incident beam direction (+z) arrowhead", wire_entry),
+                           ("Transmitted beam direction (+z) arrowhead", primary_end)]:
+    head = beamline.objects[name].evaluated_get(depsgraph)
+    tip = max((head.matrix_world @ Vector(corner)).x for corner in head.bound_box)
+    assert math.isclose(tip, expected_tip, abs_tol=1e-4), name
+for obj in [incoming, transmitted, beamline.objects["Reflected SAXS direction"]]:
+    color = obj.data.materials[0].diffuse_color
+    assert color[2] > color[0], obj.name
 pci_evaluated = pci.evaluated_get(depsgraph)
 pci_left_edge = min((pci_evaluated.matrix_world @ Vector(c)).x for c in pci_evaluated.bound_box)
 assert 0 < pci_left_edge-primary_end < 1, (pci_left_edge, primary_end)
@@ -127,7 +155,7 @@ bpy.context.window.scene = overview
 print(json.dumps({"status": "PASS", "scenes": len(bpy.data.scenes),
                   "packed_images": len(images), "wire_diameter_um": 2*radius,
                   "fwhm_um": fwhm, "offsets_um": [-5, 0, 5],
-                  "checks": "reopened scene geometry, Gaussian profile, packed assets, text framing, Fig. 2 HAPG plates and both detector panels, exactly one red 3D SAXS branch, horizontal gold beam to XPCI"}))
+                  "checks": "reopened scene geometry, unchanged gold interaction beams, packed assets, text framing, Fig. 2 HAPG plates and detector panels, blue incident/transmitted arrows and one blue SAXS branch"}))
 
 # Render the saved presentation at screen size for visual review, without
 # changing the saved .blend or the full-resolution deliverable.
